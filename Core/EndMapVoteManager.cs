@@ -724,8 +724,12 @@ namespace cs2_rockthevote
             int maxExt = _generalConfig.MaxMapExtensions;
             bool unlimited = maxExt <= 0;  // treat 0 or negative as unlimited
 
+            bool extensionsDisabledForMap = _generalConfig.DisabledExtensionMaps
+                .Contains(Server.MapName, StringComparer.OrdinalIgnoreCase);
+
             bool canShowExtendOption = !isRtv
                 && _endMapConfig.IncludeExtendCurrentMap
+                && !extensionsDisabledForMap
                 && (unlimited || _pluginState.MapExtensionCount < maxExt);
 
             int mapsToShow = !isRtv

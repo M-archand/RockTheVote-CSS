@@ -115,6 +115,10 @@ namespace cs2_rockthevote
 
         public bool DebugLogging { get; set; } = false;
         public int MaxMapExtensions { get; set; } = 2;
+        public string DisableMapExtensions { get; set; } = "";
+
+        [JsonIgnore]
+        public string[] DisabledExtensionMaps => PermissionUtility.Parse(DisableMapExtensions);
         public int RoundTimeExtension { get; set; } = 15;
         public int MapsInCoolDown { get; set; } = 3;
         public bool HideHudAfterVote { get; set; } = true;
@@ -129,7 +133,7 @@ namespace cs2_rockthevote
 
     public class Config : BasePluginConfig, IBasePluginConfig
     {
-        public const int CurrentVersion = 23;
+        public const int CurrentVersion = 24;
 
         [JsonPropertyName("ConfigVersion")]
         public override int Version { get; set; } = CurrentVersion;
