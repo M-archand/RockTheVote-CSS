@@ -119,7 +119,7 @@ namespace cs2_rockthevote
             return ChangeNextMap();
         }
 
-        public bool ChangeNextMap()
+        public bool ChangeNextMap(float delaySeconds = 3.0F)
         {
             if (!_pluginState.MapChangeScheduled)
                 return false;
@@ -144,8 +144,6 @@ namespace cs2_rockthevote
             Server.PrintToChatAll(_localizer.LocalizeWithPrefixInternal(_prefix, "general.changing-map", map.Name));
 
             string mapBefore = Server.MapName ?? string.Empty;
-
-            float delaySeconds = 3.0F;
 
             if (delaySeconds <= 0)
             {

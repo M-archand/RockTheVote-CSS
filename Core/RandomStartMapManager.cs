@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
 namespace cs2_rockthevote
 {
@@ -8,12 +9,19 @@ namespace cs2_rockthevote
         private readonly MapLister _mapLister = mapLister;
         private readonly ChangeMapManager _changeMapManager = changeMapManager;
         private bool _firstMapStart = true;
+        private Timer? _timerChangeMap;
         private GeneralConfig _generalConfig = new();
         private Plugin? _plugin;
 
         public void OnLoad(Plugin plugin)
         {
             _plugin = plugin;
+        }
+
+        public void Unload(Plugin plugin)
+        {
+            _timerChangeMap?.Kill();
+            _timerChangeMap = null;
         }
 
         public void OnConfigParsed(Config config)
@@ -23,11 +31,9 @@ namespace cs2_rockthevote
 
         public void OnMapStart(string currentMap)
         {
-            // Only run on the very first map start, and only if enabled in config
+            // Only act while the initial random change is still pending
             if (!_generalConfig.RandomStartMap || !_firstMapStart)
                 return;
-
-            _firstMapStart = false;
 
             // Build a list of maps
             var candidates = _mapLister.Maps?
@@ -35,14 +41,23 @@ namespace cs2_rockthevote
                 .ToList();
 
             if (candidates == null || candidates.Count == 0)
+            {
+                _firstMapStart = false;
                 return;
+            }
 
             // Pick a random map
             var pick = candidates[new Random().Next(candidates.Count)];
 
-            // Route through ChangeMapManager as it gives IsMapValid fallback + verify-retry
-            _changeMapManager.ScheduleMapChange(pick.Name);
-            _changeMapManager.ChangeNextMap();
+            _timerChangeMap?.Kill();
+            _timerChangeMap = _plugin?.AddTimer(3.0f, () =>
+            {
+                _timerChangeMap = null;
+                _firstMapStart = false;
+
+                _changeMapManager.ScheduleMapChange(pick.Name);
+                _changeMapManager.ChangeNextMap(0f);
+            });
         }
     }
 }
