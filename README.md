@@ -72,7 +72,7 @@ General purpose map voting plugin.
 
 ```json
 {
-  "ConfigVersion": 23,
+  "ConfigVersion": 24,
   "Rtv": {
     "Enabled": true,
     "EnabledInWarmup": false,
@@ -179,7 +179,6 @@ de_dust2
 ```
 
 # Roadmap
-- [ ] !extend max extension value
 - [ ] Add vote percentage required for winning map (e.g. must receive 25% of the vote)
 - [ ] Add vote runnoff (e.g. 2nd stage of voting between 2 maps if minimum vote percentage not achieved for a map)
 
