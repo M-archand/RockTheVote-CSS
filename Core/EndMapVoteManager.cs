@@ -747,9 +747,12 @@ namespace cs2_rockthevote
 
             // Get map list
             var mapsScrambled = Shuffle(new Random(), _mapLister.Maps!.Select(x => x.Name)
-                .Where(x => x != Server.MapName && !_mapCooldown.IsMapInCooldown(x)).ToList());
+                .Where(x => !_mapCooldown.IsMapInCooldown(x)).ToList());
 
-            mapsElected = [.. _nominationManager.NominationWinners().Concat(mapsScrambled).Distinct()];
+            var nominationWinners = _nominationManager.NominationWinners()
+                .Where(x => !_mapCooldown.IsMapInCooldown(x));
+
+            mapsElected = [.. nominationWinners.Concat(mapsScrambled).Distinct()];
 
             // Create vote list
             List<string> voteOptions = new();
