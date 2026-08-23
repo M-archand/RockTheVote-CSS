@@ -77,5 +77,9 @@
   "emv.revote": "Wpisz {lightred}!revote {default}, aby zmienić swój głos.",
 
   "nextmap": "Następna mapa będzie {zielona}{0}",
-  "nextmap.decided-by-vote": "Następna mapa zostanie wybrana w głosowaniu"
+  "nextmap.decided-by-vote": "Następna mapa zostanie wybrana w głosowaniu",
+
+  "cooldown.check-console": "Mapy w trakcie odnawiania zostały wypisane w twojej konsoli.",
+  "cooldown.none": "Obecnie żadna mapa nie jest w trakcie odnawiania.",
+  "cooldown.most-recent": "(ostatnio grana)"
 }

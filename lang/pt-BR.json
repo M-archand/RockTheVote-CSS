@@ -77,5 +77,9 @@
   "emv.revote": "Digite {lightred}!revote {default}para alterar seu voto.",
 
   "nextmap": "O próximo mapa será {green}{0}",
-  "nextmap.decided-by-vote": "O próximo mapa será decidido por votação"
+  "nextmap.decided-by-vote": "O próximo mapa será decidido por votação",
+
+  "cooldown.check-console": "Os mapas em espera foram exibidos no seu console.",
+  "cooldown.none": "Não há mapas em espera no momento.",
+  "cooldown.most-recent": "(jogado mais recentemente)"
 }

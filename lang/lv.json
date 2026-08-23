@@ -77,5 +77,9 @@
   "emv.revote": "Ieraksti {lightred}!revote {default}, lai mainītu savu balsi.",
 
   "nextmap": "Nākamā karte būs {zaļa}{0}",
-  "nextmap.decided-by-vote": "Nākamā karte tiks noteikta balsojot"
+  "nextmap.decided-by-vote": "Nākamā karte tiks noteikta balsojot",
+
+  "cooldown.check-console": "Kartes nogaidīšanas periodā ir izvadītas tavā konsolē.",
+  "cooldown.none": "Šobrīd nevienai kartei nav nogaidīšanas perioda.",
+  "cooldown.most-recent": "(nesenāk spēlētā)"
 }

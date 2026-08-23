@@ -77,5 +77,9 @@
   "emv.revote": "Type {lightred}!revote {default}to change your vote.",
 
   "nextmap": "Next map will be {green}{0}",
-  "nextmap.decided-by-vote": "Next map will be decided by vote"
+  "nextmap.decided-by-vote": "Next map will be decided by vote",
+
+  "cooldown.check-console": "Maps on cooldown have been printed to your console.",
+  "cooldown.none": "There are currently no maps on cooldown.",
+  "cooldown.most-recent": "(most recently played)"
 }

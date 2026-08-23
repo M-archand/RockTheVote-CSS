@@ -77,5 +77,9 @@
   "emv.revote": "Введіть {lightred}!revote {default}, щоб змінити свій голос.",
 
   "nextmap": "Наступна карта буде {green}{0}",
-  "nextmap.decided-by-vote": "Наступна карта буде визначена голосуванням"
+  "nextmap.decided-by-vote": "Наступна карта буде визначена голосуванням",
+
+  "cooldown.check-console": "Карти на перезарядці виведені у вашу консоль.",
+  "cooldown.none": "Наразі немає карт на перезарядці.",
+  "cooldown.most-recent": "(остання зіграна)"
 }

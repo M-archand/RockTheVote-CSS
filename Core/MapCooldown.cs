@@ -108,6 +108,9 @@ namespace cs2_rockthevote.Core
             }
         }
 
+        // Ordered oldest -> newest, the last entry is the most recently played map
+        public IReadOnlyList<string> MapsOnCooldown => mapsOnCoolDown;
+
         public bool IsMapInCooldown(string map)
         {
             if (string.IsNullOrEmpty(map))

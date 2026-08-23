@@ -51,6 +51,7 @@ General purpose map voting plugin.
   
 ![mapscommand](https://github.com/user-attachments/assets/d4ab1377-0b29-45b6-bdaa-06b6a7664751)
 
+- !cooldown command. List the maps currently on cooldown in the console (most recently played at the top). Configurable aliases, 10 second per-player cooldown.
 - !reloadmaps command. Rebuild the map list mid game
 - !reloadrtv command. Reload the rtv config mid game
 
@@ -72,7 +73,7 @@ General purpose map voting plugin.
 
 ```json
 {
-  "ConfigVersion": 24,
+  "ConfigVersion": 25,
   "Rtv": {
     "Enabled": true,
     "EnabledInWarmup": false,
@@ -159,6 +160,7 @@ General purpose map voting plugin.
     "DisableMapExtensions": "", # Comma separated list of maps that can't be extended, e.g. "surf_utopia_njv, surf_mesa_revo". Listed maps won't show the extend option in the End of Map Vote
     "RoundTimeExtension": 15, # How long the extension will be in minutes for !VoteExtend or End of Map Vote extension
     "MapsInCoolDown": 3, # How many recent maps that won't appear again in the End of Map Vote/can't be nominated (0 = no cooldown, but current map is always in cooldown)
+    "CooldownCommands": ["css_cooldown"], # Commands that print the maps currently on cooldown to the player's console, multiple can be set
     "HideHudAfterVote": true, # Only applicable in MenuType = HudMenu. true = closes the hud after the player has voted
     "RandomStartMap": false, # true = a random map will be used when the server restarts. false = will use whatever you set in your startup command
     "IncludeSpectator": true, # true = spectators can vote (only applicable to !rtv). false = spectators can't vote

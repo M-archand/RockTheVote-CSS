@@ -77,5 +77,9 @@
   "emv.revote": "Írd be: {lightred}!revote {default}a szavazatod módosításához.",
 
   "nextmap": "A következő pálya {zöld}{0} lesz",
-  "nextmap.decided-by-vote": "A következő pályáról szavazással döntünk"
+  "nextmap.decided-by-vote": "A következő pályáról szavazással döntünk",
+
+  "cooldown.check-console": "A lehűlési időn lévő pályák kiírásra kerültek a konzolodra.",
+  "cooldown.none": "Jelenleg egyetlen pálya sincs lehűlési időn.",
+  "cooldown.most-recent": "(legutóbb játszott)"
 }

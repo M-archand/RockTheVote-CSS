@@ -77,5 +77,9 @@
   "emv.revote": "Tapez {lightred}!revote {default}pour changer votre vote.",
   
   "nextmap": "La prochaine carte sera {green}{0}",
-  "nextmap.decided-by-vote": "La prochaine carte sera décidée par vote"
+  "nextmap.decided-by-vote": "La prochaine carte sera décidée par vote",
+
+  "cooldown.check-console": "Les cartes en temps de rechargement ont été affichées dans votre console.",
+  "cooldown.none": "Aucune carte n'est actuellement en temps de rechargement.",
+  "cooldown.most-recent": "(jouée le plus récemment)"
 }
