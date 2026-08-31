@@ -36,6 +36,7 @@ namespace cs2_rockthevote.CrossCutting
             _generalConfig = config.General;
             _endMapConfig = config.EndOfMapVote;
             _voteExtendConfig = config.VoteExtend;
+            _nomConfig = config.Nominate;
             _rtvConfig = config.Rtv;
 
             if (_plugin != null)
