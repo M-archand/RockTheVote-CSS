@@ -273,61 +273,65 @@ namespace cs2_rockthevote
             }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
         }
 
-        private void StartIgnoreWinConditionsPoll(string winnerMapName)
+        // Fallback poll for triggers without a guaranteed native event (e.g. IgnoredWinConditions)
+        private void StartIgnoreWinConditionsPoll(string winnerMapName, MapChangeTrigger trigger = MapChangeTrigger.IgnoredWinConditions)
         {
             KillIgnoreWinConditionsPollTimer();
 
             _debugLogger.LogInformation(
-                "[RTV.MapChange] Arming plugin-owned end-of-map poll (deferring creation to next frame). map={Map} currentMap={CurrentMap}",
+                "[RTV.MapChange] Arming plugin-owned end-of-map poll (deferring creation to next frame). map={Map} trigger={Trigger} currentMap={CurrentMap}",
                 winnerMapName,
+                trigger,
                 Server.MapName
             );
 
             Server.NextFrame(() =>
             {
-                _debugLogger.LogInformation("[RTV.MapChange] NextFrame: creating poll timer now. map={Map}", winnerMapName);
-                CreateIgnoreWinConditionsPollTimer(winnerMapName);
+                _debugLogger.LogInformation("[RTV.MapChange] NextFrame: creating poll timer now. map={Map} trigger={Trigger}", winnerMapName, trigger);
+                CreateIgnoreWinConditionsPollTimer(winnerMapName, trigger);
             });
         }
 
-        private void CreateIgnoreWinConditionsPollTimer(string winnerMapName)
+        private void CreateIgnoreWinConditionsPollTimer(string winnerMapName, MapChangeTrigger trigger = MapChangeTrigger.IgnoredWinConditions)
         {
             _ignoreWinConditionsPollTimer = _plugin?.AddTimer(1.0F, () =>
             {
-                try { _debugLogger.LogInformation("[RTV.MapChange] Poll tick entry. map={Map}", winnerMapName); }
+                try { _debugLogger.LogInformation("[RTV.MapChange] Poll tick entry. map={Map} trigger={Trigger}", winnerMapName, trigger); }
                 catch { }
 
                 try
                 {
                     if (!_pluginState.MapChangeScheduled)
                     {
-                        _debugLogger.LogInformation("[RTV.MapChange] Poll tick: change no longer scheduled, stopping. map={Map}", winnerMapName);
+                        _debugLogger.LogInformation("[RTV.MapChange] Poll tick: change no longer scheduled, stopping. map={Map} trigger={Trigger}", winnerMapName, trigger);
                         KillIgnoreWinConditionsPollTimer();
                         return;
                     }
 
-                    _debugLogger.LogInformation("[RTV.MapChange] Poll tick: computing remaining seconds. map={Map}", winnerMapName);
+                    _debugLogger.LogInformation("[RTV.MapChange] Poll tick: computing remaining seconds. map={Map} trigger={Trigger}", winnerMapName, trigger);
                     int remainingSeconds = ComputeRemainingSecondsForIgnoreWinConditions();
                     _debugLogger.LogInformation(
-                        "[RTV.MapChange] Poll tick: computed. remainingSeconds={Remaining} map={Map}",
+                        "[RTV.MapChange] Poll tick: computed. remainingSeconds={Remaining} map={Map} trigger={Trigger}",
                         remainingSeconds,
-                        winnerMapName
+                        winnerMapName,
+                        trigger
                     );
 
                     if (remainingSeconds <= 3)
                     {
                         _debugLogger.LogInformation(
-                            "[RTV.MapChange] Plugin-owned trigger fired. remainingSeconds={Remaining} map={Map}",
+                            "[RTV.MapChange] Plugin-owned trigger fired. remainingSeconds={Remaining} map={Map} trigger={Trigger}",
                             remainingSeconds,
-                            winnerMapName
+                            winnerMapName,
+                            trigger
                         );
                         KillIgnoreWinConditionsPollTimer();
-                        _changeMapManager.ChangeNextMap(MapChangeTrigger.IgnoredWinConditions);
+                        _changeMapManager.ChangeNextMap(trigger);
                     }
                 }
                 catch (Exception ex)
                 {
-                    _debugLogger.LogError(ex, "[RTV.MapChange] Plugin-owned poll callback failed. map={Map}", winnerMapName);
+                    _debugLogger.LogError(ex, "[RTV.MapChange] Plugin-owned poll callback failed. map={Map} trigger={Trigger}", winnerMapName, trigger);
                 }
             }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
         }
@@ -957,12 +961,17 @@ namespace cs2_rockthevote
                     }
                     else if (ignoreRoundWinConditions)
                     {
-                        StartIgnoreWinConditionsPoll(winner.Key);
+                        StartIgnoreWinConditionsPoll(winner.Key, MapChangeTrigger.IgnoredWinConditions);
                     }
                     else
                     {
-                        if (trigger == MapChangeTrigger.RoundStart)
-                            Server.PrintToChatAll(_localizer.LocalizeWithPrefix("general.changing-map-next-round", winner.Key));
+                        // MatchEnd normally fires via EventCsWinPanelMatch, but that event is not
+                        // guaranteed on an empty server, so the fallback poll as a safety net.
+                        _debugLogger.LogInformation(
+                            "[RTV.EndMapVote] Arming MatchEnd fallback poll in case EventCsWinPanelMatch never fires. winner={Winner}",
+                            winner.Key
+                        );
+                        StartIgnoreWinConditionsPoll(winner.Key, MapChangeTrigger.MatchEnd);
                     }
                 }
                 else
