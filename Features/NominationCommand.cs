@@ -112,7 +112,7 @@ namespace cs2_rockthevote
                 var menu = MenuManager.MenuByType(menuType, title, _plugin!);
 
                 foreach (var m in _mapLister.Maps!
-                            .Where(x => !GetBaseMapName(x.Name).Equals(Server.MapName, StringComparison.OrdinalIgnoreCase)))
+                            .Where(x => !MapNameHelper.GetBaseName(x.Name).Equals(Server.MapName, StringComparison.OrdinalIgnoreCase)))
                 {
                     bool isCooldown = _mapCooldown.IsMapInCooldown(m.Name);
                     string label = isCooldown ? $"{ChatColors.Grey}{m.Name}" : m.Name;
@@ -142,7 +142,7 @@ namespace cs2_rockthevote
 
             var slot = player.Slot;
             var mapName = map.Trim();
-            var baseName = GetBaseMapName(mapName);
+            var baseName = MapNameHelper.GetBaseName(mapName);
 
             // Ensure per-player list exists
             if (!Nominations.TryGetValue(slot, out var userNoms))
@@ -239,14 +239,6 @@ namespace cs2_rockthevote
 
             // Exactly one
             return matches[0];
-        }
-
-        private string GetBaseMapName(string displayName)
-        {
-            var idx = displayName.IndexOf(" (", StringComparison.Ordinal);
-            return idx >= 0
-                ? displayName.Substring(0, idx)
-                : displayName;
         }
 
         public List<string> NominationWinners()

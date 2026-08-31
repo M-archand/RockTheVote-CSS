@@ -116,12 +116,8 @@ namespace cs2_rockthevote.Core
             if (string.IsNullOrEmpty(map))
                 return false;
 
-            // Grab the base map name (everything before the first space or parenthesis)
-            // E.g. "surf_beginner (T1, Staged)" -> "surf_beginner"
-            var baseName = map;
-            var idx = map.IndexOf(' ');
-            if (idx > 0)
-                baseName = map[..idx];
+            // Grab the base map name, e.g. "surf_beginner (T1, Staged)" -> "surf_beginner"
+            var baseName = MapNameHelper.GetBaseName(map);
 
             // Compare lowercase
             var lowerName = baseName.Trim().ToLowerInvariant();
