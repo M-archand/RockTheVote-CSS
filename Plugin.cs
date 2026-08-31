@@ -39,6 +39,7 @@ namespace cs2_rockthevote
         ReloadMapsCommand reloadMapsCommand,
         AFKManager afkManager,
         PluginState pluginState,
+        PanoramaVote panoramaVote,
         IStringLocalizer stringLocalizer,
         ILogger<Plugin> logger) : BasePlugin, IPluginConfig<Config>
     {
@@ -61,6 +62,7 @@ namespace cs2_rockthevote
         private readonly StringLocalizer _localizer = new(stringLocalizer, "rtv.prefix");
         private readonly ILogger<Plugin> _logger = logger;
         private readonly PluginState _pluginState = pluginState;
+        private readonly PanoramaVote _panoramaVote = panoramaVote;
         private bool _hasMenuManager = false;
 
 
@@ -107,7 +109,6 @@ namespace cs2_rockthevote
         {
             RemoveListener<OnMapStart>(_dependencyManager.OnMapStart);
             _dependencyManager.OnPluginUnload(this);
-            PanoramaVote.Cleanup();
         }
 
         public void OnConfigParsed(Config config)
@@ -141,7 +142,7 @@ namespace cs2_rockthevote
 
         private HookResult OnVoteCast(EventVoteCast @event, GameEventInfo info)
         {
-            PanoramaVote.VoteCast(@event);
+            _panoramaVote.VoteCast(@event);
             return HookResult.Continue;
         }
 

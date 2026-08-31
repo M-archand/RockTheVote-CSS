@@ -5,7 +5,6 @@ using CounterStrikeSharp.API.Modules.Timers;
 using cs2_rockthevote.Core;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
 namespace cs2_rockthevote
@@ -30,9 +29,10 @@ namespace cs2_rockthevote
         }
     }
 
-    public class VoteExtendRoundTimeCommand(TimeLimitManager timeLimitManager, ExtendRoundTimeManager extendRoundTimeManager, GameRules gameRules, IStringLocalizer stringLocalizer, PluginState pluginState, ILogger<VoteExtendRoundTimeCommand> logger) : IPluginDependency<Plugin, Config>
+    public class VoteExtendRoundTimeCommand(TimeLimitManager timeLimitManager, ExtendRoundTimeManager extendRoundTimeManager, GameRules gameRules, IStringLocalizer stringLocalizer, PluginState pluginState, PanoramaVote panoramaVote, ILogger<VoteExtendRoundTimeCommand> logger) : IPluginDependency<Plugin, Config>
     {
         private readonly ILogger<VoteExtendRoundTimeCommand> _logger = logger;
+        private readonly PanoramaVote _panoramaVote = panoramaVote;
         private TimeLimitManager _timeLimitManager = timeLimitManager;
         private ExtendRoundTimeManager _extendRoundTimeManager = extendRoundTimeManager;
         private readonly GameRules _gameRules = gameRules;
@@ -91,8 +91,7 @@ namespace cs2_rockthevote
                 }
                 else if (_voteExtendConfig.EnablePanorama)
                 {
-                    PanoramaVote.SetDebugLogger(_generalConfig.DebugLogging ? _logger : NullLogger<VoteExtendRoundTimeCommand>.Instance);
-                    PanoramaVote.Init();
+                    _panoramaVote.Init();
                     Server.ExecuteCommand("sv_allow_votes 1");
                     Server.ExecuteCommand("sv_vote_allow_in_warmup 1");
                     Server.ExecuteCommand("sv_vote_allow_spectators 1");
@@ -103,7 +102,7 @@ namespace cs2_rockthevote
                         _extendRoundTimeManager.ChatCountdown(_voteExtendConfig.VoteDuration);
                     }
 
-                    PanoramaVote.SendYesNoVoteToAll(
+                    _panoramaVote.SendYesNoVoteToAll(
                         _voteExtendConfig.VoteDuration,
                         player.Slot, // player.Slot Header = Vote by: playerName. VoteConstants.VOTE_CALLER_SERVER Header = Vote by: Server
                         "#SFUI_vote_passed_nextlevel_extend",
@@ -157,7 +156,7 @@ namespace cs2_rockthevote
                 case YesNoVoteAction.VoteAction_Vote:
                     try
                     {
-                        var vc = PanoramaVote.VoteController;
+                        var vc = _panoramaVote.VoteController;
                         if (vc != null)
                         {
                             if (!vc.IsValid)
@@ -179,7 +178,7 @@ namespace cs2_rockthevote
                                 {
                                     try
                                     {
-                                        PanoramaVote.EndVote(YesNoVoteEndReason.VoteEnd_Cancelled, overrideFailCode: 0);
+                                        _panoramaVote.EndVote(YesNoVoteEndReason.VoteEnd_Cancelled, overrideFailCode: 0);
                                         _pluginState.ExtendTimeVoteHappening = false;
                                         ActivateCooldown();
                                     }
@@ -198,7 +197,7 @@ namespace cs2_rockthevote
                                 {
                                     try
                                     {
-                                        PanoramaVote.EndVote(YesNoVoteEndReason.VoteEnd_AllVotes);
+                                        _panoramaVote.EndVote(YesNoVoteEndReason.VoteEnd_AllVotes);
                                     }
                                     catch (Exception ex)
                                     {
@@ -257,7 +256,7 @@ namespace cs2_rockthevote
             if (!_voteExtendConfig.EnablePanorama)
                 _extendRoundTimeManager?.RemoveVote(player.Slot);
             else
-                PanoramaVote.RemovePlayerFromVote(player.Slot);
+                _panoramaVote.RemovePlayerFromVote(player.Slot);
         }
 
         public void OnLoad(Plugin plugin)

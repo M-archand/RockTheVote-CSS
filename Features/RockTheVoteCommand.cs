@@ -1,12 +1,10 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
 using CounterStrikeSharp.API.Modules.Timers;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace cs2_rockthevote
 {
@@ -30,6 +28,7 @@ namespace cs2_rockthevote
         private readonly EndMapVoteManager _endmapVoteManager;
         private readonly PluginState _pluginState;
         private readonly AFKManager _afk;
+        private readonly PanoramaVote _panoramaVote;
         private RtvConfig _config = new();
         private GeneralConfig _generalConfig = new();
         private AsyncVoteManager? _voteManager;
@@ -45,13 +44,14 @@ namespace cs2_rockthevote
         public int TimeLeft => (int)Math.Max(0, (_rtvEndTime - DateTime.UtcNow).TotalSeconds);
 
 
-        public RockTheVoteCommand(GameRules gameRules, EndMapVoteManager endmapVoteManager, StringLocalizer localizer, PluginState pluginState, AFKManager afkManager, ILogger<RockTheVoteCommand> logger)
+        public RockTheVoteCommand(GameRules gameRules, EndMapVoteManager endmapVoteManager, StringLocalizer localizer, PluginState pluginState, AFKManager afkManager, PanoramaVote panoramaVote, ILogger<RockTheVoteCommand> logger)
         {
             _localizer = localizer;
             _gameRules = gameRules;
             _endmapVoteManager = endmapVoteManager;
             _pluginState = pluginState;
             _afk = afkManager;
+            _panoramaVote = panoramaVote;
             _logger = logger;
         }
 
@@ -92,7 +92,6 @@ namespace cs2_rockthevote
             StopRtvTimer();
             KillTimer();
             StopReminderTimer();
-            PanoramaVote.OnMapStart();
         }
 
         private bool TreatVotedPlayersAsActive() =>
@@ -224,8 +223,7 @@ namespace cs2_rockthevote
 
                 if (usePanorama)
                 {
-                    PanoramaVote.SetDebugLogger(_generalConfig.DebugLogging ? _logger : NullLogger<RockTheVoteCommand>.Instance);
-                    PanoramaVote.Init();
+                    _panoramaVote.Init();
                     Server.ExecuteCommand("sv_allow_votes 1");
                     Server.ExecuteCommand("sv_vote_allow_in_warmup 1");
                     Server.ExecuteCommand("sv_vote_allow_spectators 1");
@@ -235,7 +233,7 @@ namespace cs2_rockthevote
 
                     if (!needsFilter)
                     {
-                        PanoramaVote.SendYesNoVoteToAll(
+                        _panoramaVote.SendYesNoVoteToAll(
                             _config.RtvVoteDuration,
                             player.Slot, // player.Slot Header = Vote by: playerName. VoteConstants.VOTE_CALLER_SERVER Header = Vote by: Server
                             "#SFUI_vote_changelevel",
@@ -264,7 +262,7 @@ namespace cs2_rockthevote
                             return;
                         }
 
-                        PanoramaVote.SendYesNoVote(
+                        _panoramaVote.SendYesNoVote(
                             _config.RtvVoteDuration,
                             player.Slot, // player.Slot Header = Vote by: playerName. VoteConstants.VOTE_CALLER_SERVER Header = Vote by: Server
                             "#SFUI_vote_changelevel",
@@ -399,7 +397,7 @@ namespace cs2_rockthevote
                 case YesNoVoteAction.VoteAction_Vote:
                     try
                     {
-                        var vc = PanoramaVote.VoteController;
+                        var vc = _panoramaVote.VoteController;
                         if (vc != null)
                         {
                             if (!vc.IsValid)
@@ -421,7 +419,7 @@ namespace cs2_rockthevote
                                 {
                                     try
                                     {
-                                        PanoramaVote.EndVote(YesNoVoteEndReason.VoteEnd_Cancelled, overrideFailCode: 0);
+                                        _panoramaVote.EndVote(YesNoVoteEndReason.VoteEnd_Cancelled, overrideFailCode: 0);
                                         ActivateCooldown();
                                     }
                                     catch (Exception ex)
@@ -439,7 +437,7 @@ namespace cs2_rockthevote
                                 {
                                     try
                                     {
-                                        PanoramaVote.EndVote(YesNoVoteEndReason.VoteEnd_AllVotes);
+                                        _panoramaVote.EndVote(YesNoVoteEndReason.VoteEnd_AllVotes);
                                     }
                                     catch (Exception ex)
                                     {
@@ -640,7 +638,7 @@ namespace cs2_rockthevote
                 });
             }
             else
-                PanoramaVote.RemovePlayerFromVote(player.Slot);
+                _panoramaVote.RemovePlayerFromVote(player.Slot);
         }
     }
 }

@@ -56,27 +56,28 @@ namespace cs2_rockthevote
     public delegate bool YesNoVoteResult(YesNoVoteInfo info);
     public delegate void YesNoVoteHandler(YesNoVoteAction action, int param1, int param2);
 
-    public static class PanoramaVote
+    public class PanoramaVote(ILogger<PanoramaVote> logger) : IPluginDependency<Plugin, Config>
     {
-        private static int m_iVoteCount = 0;
-        private static bool m_bIsVoteInProgress = false;
-        private static YesNoVoteHandler? m_VoteHandler = null;
-        private static YesNoVoteResult? m_VoteResult = null;
-        private static int m_iVoterCount;
-        private static int[] m_iVoters = new int[VoteConstants.MAXPLAYERS];
-        private static int m_iCurrentVoteCaller;
-        private static string m_szCurrentVoteTitle = string.Empty;
-        private static string m_szCurrentVoteDetailStr = string.Empty;
-        public static CVoteController? VoteController { get; private set; } = null;
-        private static RecipientFilter CurrentVotefilter = new RecipientFilter();
-        private static Timer? m_VoteTimer = null;
-        private static ILogger _debugLogger = NullLogger.Instance;
+        private readonly ILogger<PanoramaVote> _logger = logger;
+        private int m_iVoteCount = 0;
+        private bool m_bIsVoteInProgress = false;
+        private YesNoVoteHandler? m_VoteHandler = null;
+        private YesNoVoteResult? m_VoteResult = null;
+        private int m_iVoterCount;
+        private int[] m_iVoters = new int[VoteConstants.MAXPLAYERS];
+        private int m_iCurrentVoteCaller;
+        private string m_szCurrentVoteTitle = string.Empty;
+        private string m_szCurrentVoteDetailStr = string.Empty;
+        public CVoteController? VoteController { get; private set; } = null;
+        private RecipientFilter CurrentVotefilter = new RecipientFilter();
+        private Timer? m_VoteTimer = null;
+        private ILogger _debugLogger = NullLogger.Instance;
 
-        /// Sets the debug logger used for diagnostic messages (gated by DebugLogging)
-        public static void SetDebugLogger(ILogger logger) => _debugLogger = logger;
+        public void OnConfigParsed(Config config) =>
+            _debugLogger = config.General.DebugLogging ? _logger : NullLogger.Instance;
 
         /// Resets the vote state, clearing any ongoing vote information.
-        public static void Reset(CVoteController? voteController = null)
+        public void Reset(CVoteController? voteController = null)
         {
             m_VoteTimer?.Kill();
             m_VoteTimer = null;
@@ -85,6 +86,7 @@ namespace cs2_rockthevote
             m_VoteResult = null;
             m_szCurrentVoteTitle = string.Empty;
             m_szCurrentVoteDetailStr = string.Empty;
+            CurrentVotefilter = new RecipientFilter();
 
             if(voteController != null)
             {
@@ -102,9 +104,11 @@ namespace cs2_rockthevote
         }
 
         /// Clears all vote states on map change.
-        public static void OnMapStart() => Cleanup();
+        public void OnMapStart(string mapName) => Cleanup();
 
-        public static void Cleanup()
+        public void Unload(Plugin plugin) => Cleanup();
+
+        public void Cleanup()
         {
             m_VoteTimer?.Kill();
             m_VoteTimer = null;
@@ -113,11 +117,12 @@ namespace cs2_rockthevote
             m_VoteResult = null;
             m_szCurrentVoteTitle = string.Empty;
             m_szCurrentVoteDetailStr = string.Empty;
+            CurrentVotefilter = new RecipientFilter();
             VoteController = null;
         }
 
         /// Initializes the vote controller if a vote is not already in progress.
-        public static void Init()
+        public void Init()
         {
             if (m_bIsVoteInProgress)
                 return;
@@ -131,7 +136,7 @@ namespace cs2_rockthevote
         }
 
         /// Handles the event when a vote is cast by a player.
-        public static void VoteCast(GameEvent pEvent)
+        public void VoteCast(GameEvent pEvent)
         {
             if (VoteController == null || !m_bIsVoteInProgress)
                 return;
@@ -148,7 +153,7 @@ namespace cs2_rockthevote
         }
 
         /// Removes a player from the current vote.
-        public static void RemovePlayerFromVote(int iSlot)
+        public void RemovePlayerFromVote(int iSlot)
         {
             if (!m_bIsVoteInProgress) return;
 
@@ -169,7 +174,7 @@ namespace cs2_rockthevote
         }
 
         /// Checks if a player is in the current vote pool.
-        public static bool IsPlayerInVotePool(int iSlot)
+        public bool IsPlayerInVotePool(int iSlot)
         {
             if (!m_bIsVoteInProgress)
                 return false;
@@ -181,7 +186,7 @@ namespace cs2_rockthevote
         }
 
         /// Updates the vote counts and fires a vote changed event.
-        public static void UpdateVoteCounts()
+        public void UpdateVoteCounts()
         {
             if(VoteController == null)return;
             
@@ -198,13 +203,13 @@ namespace cs2_rockthevote
         }
 
         /// Checks if a vote is currently in progress.
-        public static bool IsVoteInProgress()
+        public bool IsVoteInProgress()
         {
             return m_bIsVoteInProgress;
         }
 
         /// Start a new Yes/No vote for all players
-        public static bool SendYesNoVoteToAll(float flDuration, int iCaller, string sVoteTitle, string sDetailStr, YesNoVoteResult resultCallback, YesNoVoteHandler? handler = null)
+        public bool SendYesNoVoteToAll(float flDuration, int iCaller, string sVoteTitle, string sDetailStr, YesNoVoteResult resultCallback, YesNoVoteHandler? handler = null)
         {
             CurrentVotefilter.Clear();
             foreach(var player in Utilities.GetPlayers().Where(p => p != null && p.IsValid && !p.IsBot && !p.IsHLTV && p.Connected == PlayerConnectedState.Connected))
@@ -216,7 +221,7 @@ namespace cs2_rockthevote
         }
         
         /// Starts a new Yes/No vote for Specific Players.
-        public static bool SendYesNoVote(float flDuration, int iCaller, string sVoteTitle, string sDetailStr, RecipientFilter pFilter, YesNoVoteResult resultCallback, YesNoVoteHandler? handler = null)
+        public bool SendYesNoVote(float flDuration, int iCaller, string sVoteTitle, string sDetailStr, RecipientFilter pFilter, YesNoVoteResult resultCallback, YesNoVoteHandler? handler = null)
         {
             if(VoteController == null)
                 return false;
@@ -267,7 +272,7 @@ namespace cs2_rockthevote
         }
         
         /// Sends a user message to start the vote.
-        private static void SendVoteStartUM(RecipientFilter pFilter)
+        private void SendVoteStartUM(RecipientFilter pFilter)
         {
             UserMessage voteStart = UserMessage.FromId(346);
             voteStart.SetInt("team", -1);
@@ -281,7 +286,7 @@ namespace cs2_rockthevote
         }
 
         /// Initializes the voters for the current vote.
-        private static void InitVoters(RecipientFilter pFilter)
+        private void InitVoters(RecipientFilter pFilter)
         {
             m_iVoterCount = 0;
             for (int i = 0; i < VoteConstants.MAXPLAYERS; i++)
@@ -301,7 +306,7 @@ namespace cs2_rockthevote
         }
 
         /// Checks if the vote can be closed early based on the number of votes cast.
-        private static void CheckForEarlyVoteClose()
+        private void CheckForEarlyVoteClose()
         {
             if(VoteController == null)return;
 
@@ -313,7 +318,7 @@ namespace cs2_rockthevote
         }
 
         /// Cancels the current vote.
-        public static void CancelVote()
+        public void CancelVote()
         {
             if (!m_bIsVoteInProgress)
                 return;
@@ -322,7 +327,7 @@ namespace cs2_rockthevote
         }
         
         /// Ends the current vote with the specified reason.
-        public static void EndVote(YesNoVoteEndReason reason, int overrideFailCode = -1)
+        public void EndVote(YesNoVoteEndReason reason, int overrideFailCode = -1)
         {
             if (!m_bIsVoteInProgress)
                 return;
@@ -379,7 +384,7 @@ namespace cs2_rockthevote
 
         }
 
-        private static void SendVoteFailed(YesNoVoteEndReason reason, int failCodeOverride = -1)
+        private void SendVoteFailed(YesNoVoteEndReason reason, int failCodeOverride = -1)
         {
             UserMessage voteFailed = UserMessage.FromId(348);
             voteFailed.SetInt("team", -1);
@@ -393,7 +398,7 @@ namespace cs2_rockthevote
         }
 
         /// Sends a user message indicating that the vote passed.
-        private static void SendVotePassed(string disp_str = "", string details_str = "")
+        private void SendVotePassed(string disp_str = "", string details_str = "")
         {
             UserMessage votePass = UserMessage.FromId(347);
 
