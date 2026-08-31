@@ -115,10 +115,10 @@ namespace cs2_rockthevote
                 _endMapConfig.VoteDuration = adjusted;
 
                 _logger.LogError(
-                    $"EndOfMapVote config invalid: VoteDuration ({_endMapConfig.VoteDuration}s) must be less than " +
-                    $"TriggerSecondsBeforeEnd ({_endMapConfig.TriggerSecondsBeforeEnd}s). Automatically adjusting VoteDuration to {adjusted}s.",
+                    "EndOfMapVote config invalid: VoteDuration ({VoteDuration}s) must be less than " +
+                    "TriggerSecondsBeforeEnd ({TriggerSecondsBeforeEnd}s). Automatically adjusting VoteDuration to {AdjustedVoteDuration}s.",
                     original,
-                    config.EndOfMapVote.TriggerSecondsBeforeEnd,
+                    _endMapConfig.TriggerSecondsBeforeEnd,
                     adjusted
                 );
             }
