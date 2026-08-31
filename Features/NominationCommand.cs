@@ -6,7 +6,6 @@ using CS2MenuManager.API.Menu;
 using CS2MenuManager.API.Class;
 using CS2MenuManager.API.Enum;
 using cs2_rockthevote.Core;
-using Microsoft.Extensions.Logging;
 
 namespace cs2_rockthevote
 {
@@ -32,7 +31,6 @@ namespace cs2_rockthevote
 
     public class NominationCommand : IPluginDependency<Plugin, Config>
     {
-        private readonly ILogger<NominationCommand> _logger;
         Dictionary<int, List<string>> Nominations = new();
         private string? _nominationsMap;
         private bool _mapExtended;
@@ -44,14 +42,13 @@ namespace cs2_rockthevote
         private MapLister _mapLister;
         private Plugin? _plugin;
 
-        public NominationCommand(MapLister mapLister, GameRules gamerules, StringLocalizer localizer, PluginState pluginState, MapCooldown mapCooldown, ILogger<NominationCommand> logger)
+        public NominationCommand(MapLister mapLister, GameRules gamerules, StringLocalizer localizer, PluginState pluginState, MapCooldown mapCooldown)
         {
             _mapLister = mapLister;
             _gamerules = gamerules;
             _localizer = localizer;
             _pluginState = pluginState;
             _mapCooldown = mapCooldown;
-            _logger = logger;
         }
 
         public void MarkMapExtended() => _mapExtended = true;
@@ -137,37 +134,6 @@ namespace cs2_rockthevote
 
             Nominate(player, resolved);
         }
-
-        /*
-        public void OpenScreenMenu(CCSPlayerController player)
-        {
-            // Build the list of map names, skipping the current map and the ones on cool down
-            var voteOptions = _mapLister.Maps!
-                .Where(m => !GetBaseMapName(m.Name)
-                       .Equals(Server.MapName, StringComparison.OrdinalIgnoreCase)
-                    && !_mapCooldown.IsMapInCooldown(m.Name))
-                .Select(m => m.Name)
-                .ToList();
-
-            // Guard: nothing to nominate
-            if (voteOptions.Count == 0)
-            {
-                player.PrintToChat(_localizer.LocalizeWithPrefix("An error occured."));
-                _logger.LogError("[Nominate] An error occured while using the !nominate command with ScreenMenu, no maps could be found.");
-                return;
-            }
-
-            // Once the list is built, we open the menu on the next frame
-            Server.NextFrame(() =>
-                MapVoteScreenMenu.Open(
-                    _plugin!,
-                    player,
-                    voteOptions,
-                    (p, mapName) => CommandHandler(p, mapName),
-                    _localizer.Localize("nominate.title")
-            ));
-        }
-        */
 
         public void Nominate(CCSPlayerController player, string map)
         {

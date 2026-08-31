@@ -69,7 +69,6 @@
   "emv.vote-started": "A votação para o próximo mapa começou, faça sua escolha!",
   "emv.vote-ended": "A votação encerrou o próximo mapa será {green}{0}{default} ({1:N2}% de {2} voto(s))",
   "emv.vote-ended-no-votes": "Sem votos, o próximo mapa será {green}{0}",
-  "emv.screenmenu-title": "Votação do Mapa:",
   "emv.hud.menu-title": "Votar no próximo mapa:",
   "emv.game-instructor": "Vote no próximo mapa pelo chat!",
   "emv.hud.timer": "Votar no próximo mapa: {0}s",

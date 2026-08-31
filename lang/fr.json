@@ -69,7 +69,6 @@
   "emv.vote-started": "Le vote pour la prochaine carte a commencé, faites votre choix !",
   "emv.vote-ended": "Vote terminée, la prochaine carte sera {green}{0}{default} ({1:N2}% de {2} vote(s))",
   "emv.vote-ended-no-votes": "Aucun vote, la prochaine carte sera {green}{0}",
-  "emv.screenmenu-title": "Vote pour la carte:",
   "emv.hud.menu-title": "Votez pour la prochaine carte:",
   "emv.game-instructor": "Votez pour la prochaine carte dans le chat !",
   "emv.hud.timer": "Votez pour la prochaine carte: {0}s",

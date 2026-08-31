@@ -2,13 +2,11 @@
 using CounterStrikeSharp.API.Modules.Timers;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 using cs2_rockthevote.Core;
-using Microsoft.Extensions.Logging;
 
 namespace cs2_rockthevote
 {
-    public class EndOfMapVote(TimeLimitManager timeLimit, MaxRoundsManager maxRounds, PluginState pluginState, GameRules gameRules, EndMapVoteManager voteManager, ILogger<EndOfMapVote> logger) : IPluginDependency<Plugin, Config>
+    public class EndOfMapVote(TimeLimitManager timeLimit, MaxRoundsManager maxRounds, PluginState pluginState, GameRules gameRules, EndMapVoteManager voteManager) : IPluginDependency<Plugin, Config>
     {
-        private readonly ILogger<EndOfMapVote> _logger = logger;
         private TimeLimitManager _timeLimit = timeLimit;
         private MaxRoundsManager _maxRounds = maxRounds;
         private PluginState _pluginState = pluginState;
@@ -39,30 +37,6 @@ namespace cs2_rockthevote
         {
             KillTimer();
             _voteManager.StartVote(isRtv: false);
-            /*if (_config.Enabled)
-            {
-                if (_config.MenuType == "ScreenMenu" && PanoramaVote.IsVoteInProgress())
-                {
-                    PanoramaVote.EndVote(YesNoVoteEndReason.VoteEnd_Cancelled, overrideFailCode: 0);
-                    _plugin?.AddTimer(
-                        3.5f, () =>
-                        {
-                            try
-                            {
-                                _voteManager.StartVote(isRtv: false);
-                            }
-                            catch (Exception ex)
-                            {
-                                _logger.LogError(ex, "Vote start timer callback failed");
-                            }
-                        }, TimerFlags.STOP_ON_MAPCHANGE
-                    );
-                }
-                else
-                {
-                    _voteManager.StartVote(isRtv: false);
-                }
-            }*/
         }
 
         public void OnMapStart(string map)

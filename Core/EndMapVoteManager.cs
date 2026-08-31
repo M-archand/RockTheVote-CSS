@@ -101,7 +101,6 @@ namespace cs2_rockthevote
             _endMapConfig = config.EndOfMapVote;
             _rtvConfig = config.Rtv;
             _debugLogger = _generalConfig.DebugLogging ? _logger : NullLogger<EndMapVoteManager>.Instance;
-            //_screenConfig = config.ScreenMenu;
 
             if (!uint.TryParse(_endMapConfig.SoundPath, out _) && !SoundEventHelper.IsFullVolume(_endMapConfig.SoundVolume))
             {

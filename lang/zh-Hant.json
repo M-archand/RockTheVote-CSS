@@ -69,7 +69,6 @@
   "emv.vote-started": "下一張地圖投票已開始，快來選擇！",
   "emv.vote-ended": "投票結束，下一張地圖將是 {green}{0}{default} ({1:N2}% / {2} 票)",
   "emv.vote-ended-no-votes": "沒有人投票，下一張地圖將是 {green}{0}",
-  "emv.screenmenu-title": "地圖投票：",
   "emv.hud.menu-title": "投票選擇下一張地圖：",
   "emv.game-instructor": "在聊天中投票選擇下一張地圖！",
   "emv.hud.timer": "投票選擇下一張地圖：{0} 秒",

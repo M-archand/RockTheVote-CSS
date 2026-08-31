@@ -69,7 +69,6 @@
   "emv.vote-started": "Rozpoczęło się głosowanie na kolejną mapę, wybierz swoją!",
   "emv.vote-ended": "Głosowanie zakończone, następna mapa będzie {zielona}{0}{domyślna} ({1:N2}% z {2} głosów))",
   "emv.vote-ended-no-votes": "Brak głosów, następna mapa będzie {zielona}{0}",
-  "emv.screenmenu-title": "Głosowanie na mapę:",
   "emv.hud.menu-title": "Głosuj na następną mapę:",
   "emv.game-instructor": "Głosuj na następną mapę na czacie!",
   "emv.hud.timer": "Głosuj na następną mapę: {0}s",

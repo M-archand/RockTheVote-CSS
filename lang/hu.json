@@ -69,7 +69,6 @@
   "emv.vote-started": "Elkezdődött a szavazás a következő térképre, válassz!",
   "emv.vote-ended": "A szavazás véget ért, a következő pálya {green}{0}{default} lesz ({1:N2}% a {2} szavazatból)",
   "emv.vote-ended-no-votes": "Nincsenek szavazatok, a következő pálya {green}{0} lesz",
-  "emv.screenmenu-title": "Szavazás a pályára:",
   "emv.hud.menu-title": "Szavazz a következő pályára:",
   "emv.game-instructor": "Szavazz a következő pályára a chaten!",
   "emv.hud.timer": "Szavazás a következő pályára: {0}",

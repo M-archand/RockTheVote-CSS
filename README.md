@@ -37,7 +37,7 @@ General purpose map voting plugin.
 
 ![panoramavote](https://github.com/user-attachments/assets/31ebe223-225f-4cef-812e-3bf6c56e590d)
 ![voteextend](https://github.com/user-attachments/assets/5cfd9a5f-36a5-4a11-ae26-3e74d5387251)
-- ChatMenu/CenterHtmlMenu/WasdMenu/ConsoleMenu for EndOfMapVote/!nominate/!votemap (ScreenMenu temporarily removed)
+- ChatMenu/CenterHtmlMenu/WasdMenu/ConsoleMenu for EndOfMapVote/!nominate/!votemap
 
 ![wasdmenu](https://github.com/user-attachments/assets/1df185bf-4313-4010-81de-98111ae383dc)
 ![chatmenu](https://github.com/user-attachments/assets/8d7e9ee8-b26e-47b1-89d8-ced96b13a392)

@@ -119,33 +119,6 @@ namespace cs2_rockthevote
                 Logger.LogWarning("[RTV] Configuration version mismatch (Expected: {ExpectedVersion} | Current: {CurrentVersion})", Config.CurrentVersion, config.Version);
         }
 
-        /*
-        [GameEventHandler]
-        public HookResult OnClientSay(EventPlayerChat @event, GameEventInfo info)
-        {
-            var player = Utilities.GetPlayerFromUserid(@event.Userid);
-
-            if (player == null || !player.IsValid || player.IsBot || string.IsNullOrEmpty(@event.Text))
-                return HookResult.Continue;
-
-            string message = @event.Text.Trim();
-
-            if (message.StartsWith("!") && message.Length == 2 && char.IsDigit(message[1]))
-            {
-                int key = message[1] - '0';
-
-                var menu = CS2MenuManager.API.Class.MenuManager.GetActiveMenu(player);
-                if (menu != null && _pluginState.EofVoteHappening && Config.ScreenMenu.EnableChatHelper == true)
-                {
-                    CS2MenuManager.API.Class.MenuManager.OnKeyPress(player, key);
-                    return HookResult.Handled;
-                }
-            }
-
-            return HookResult.Continue;
-        }
-        */
-
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
         public void ReloadCommand(CCSPlayerController? player, CommandInfo command)
         {
