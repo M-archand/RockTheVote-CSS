@@ -43,7 +43,7 @@
   "general.changing-map": "正在将地图更改为{green}{0}",
   "general.changing-map-next-round": "地图将在下一轮更改为 {green}{0}{default}...",
   "general.incorrect.permission": "您没有执行此命令的正确权限。",
-  "general.chat-c​​ountdown": "投票剩余时间：{lime}{0}{default}秒",
+  "general.chat-countdown": "投票剩余时间：{lime}{0}{default}秒",
   "general.hud-countdown": "投票剩余时间：{0} 秒",
   "general.vote-in-progress": "{lightred} 已进行投票，请等待投票完成。",
   "general.timeleft": "剩余时间：{lime}{0} {default}(hh/mm/ss)",
