@@ -106,6 +106,17 @@ namespace cs2_rockthevote
         public string[] Permissions => PermissionUtility.Parse(Permission);
     }
 
+    // Shared settings for every menu using the panorama custom hud
+    public class PanoramaMenuConfig
+    {
+        public string LayoutResource { get; set; } = "panorama/layout/custom_game/rockthevote.xml";
+        public string MenuPosition { get; set; } = "CenterLeft";
+        public string HeaderSize { get; set; } = "extralarge";
+        public string HeaderColor { get; set; } = "orange";
+        public string RowSize { get; set; } = "large";
+        public string RowColor { get; set; } = "green";
+    }
+
     public class GeneralConfig
     {
         public string AdminPermission { get; set; } = "@css/root";
@@ -134,7 +145,7 @@ namespace cs2_rockthevote
 
     public class Config : BasePluginConfig, IBasePluginConfig
     {
-        public const int CurrentVersion = 25;
+        public const int CurrentVersion = 26;
 
         [JsonPropertyName("ConfigVersion")]
         public override int Version { get; set; } = CurrentVersion;
@@ -144,6 +155,7 @@ namespace cs2_rockthevote
         public VotemapConfig Votemap { get; set; } = new();
         public VoteExtendConfig VoteExtend { get; set; } = new();
         public MapChooserConfig MapChooser { get; set; } = new();
+        public PanoramaMenuConfig PanoramaMenu { get; set; } = new();
         public GeneralConfig General { get; set; } = new();
     }
 }

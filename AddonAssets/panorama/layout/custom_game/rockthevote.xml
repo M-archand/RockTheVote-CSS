@@ -1,0 +1,26 @@
+<root>
+	<styles>
+		<include src="s2r://panorama/styles/custom_game/rockthevote.vcss_c" />
+	</styles>
+	<Panel class="rtv-vote-root" hittest="false">
+		<!-- Version marker: invisible in-game, visible in a decompile so a mounted addon's revision can be identified. Bump when editing. -->
+		<Label class="rtv-version" text="rockthevote revision 1" hittest="false" />
+		<Panel id="rtv_vote_dialog" class="rtv-vote-dialog" hittest="false">
+			<Label id="rtv_header" class="rtv-vote-kicker" text="{s:rtv_header}" hittest="false" />
+			<Panel class="rtv-vote-options" hittest="false">
+				<Button id="rtv_vote_1" class="rtv-vote-row"><Label id="rtv_label_1" class="rtv-vote-row-label" text="{s:rtv_option_1}" hittest="false" /><Label id="rtv_count_1" class="rtv-vote-count" text="{s:rtv_count_1}" hittest="false" /></Button>
+				<Button id="rtv_vote_2" class="rtv-vote-row"><Label id="rtv_label_2" class="rtv-vote-row-label" text="{s:rtv_option_2}" hittest="false" /><Label id="rtv_count_2" class="rtv-vote-count" text="{s:rtv_count_2}" hittest="false" /></Button>
+				<Button id="rtv_vote_3" class="rtv-vote-row"><Label id="rtv_label_3" class="rtv-vote-row-label" text="{s:rtv_option_3}" hittest="false" /><Label id="rtv_count_3" class="rtv-vote-count" text="{s:rtv_count_3}" hittest="false" /></Button>
+				<Button id="rtv_vote_4" class="rtv-vote-row"><Label id="rtv_label_4" class="rtv-vote-row-label" text="{s:rtv_option_4}" hittest="false" /><Label id="rtv_count_4" class="rtv-vote-count" text="{s:rtv_count_4}" hittest="false" /></Button>
+				<Button id="rtv_vote_5" class="rtv-vote-row"><Label id="rtv_label_5" class="rtv-vote-row-label" text="{s:rtv_option_5}" hittest="false" /><Label id="rtv_count_5" class="rtv-vote-count" text="{s:rtv_count_5}" hittest="false" /></Button>
+				<Button id="rtv_vote_6" class="rtv-vote-row"><Label id="rtv_label_6" class="rtv-vote-row-label" text="{s:rtv_option_6}" hittest="false" /><Label id="rtv_count_6" class="rtv-vote-count" text="{s:rtv_count_6}" hittest="false" /></Button>
+				<Button id="rtv_vote_7" class="rtv-vote-row"><Label id="rtv_label_7" class="rtv-vote-row-label" text="{s:rtv_option_7}" hittest="false" /><Label id="rtv_count_7" class="rtv-vote-count" text="{s:rtv_count_7}" hittest="false" /></Button>
+				<Button id="rtv_vote_8" class="rtv-vote-row"><Label id="rtv_label_8" class="rtv-vote-row-label" text="{s:rtv_option_8}" hittest="false" /><Label id="rtv_count_8" class="rtv-vote-count" text="{s:rtv_count_8}" hittest="false" /></Button>
+				<Button id="rtv_vote_9" class="rtv-vote-row"><Label id="rtv_label_9" class="rtv-vote-row-label" text="{s:rtv_option_9}" hittest="false" /><Label id="rtv_count_9" class="rtv-vote-count" text="{s:rtv_count_9}" hittest="false" /></Button>
+				<Button id="rtv_vote_10" class="rtv-vote-row"><Label id="rtv_label_10" class="rtv-vote-row-label" text="{s:rtv_option_10}" hittest="false" /><Label id="rtv_count_10" class="rtv-vote-count" text="{s:rtv_count_10}" hittest="false" /></Button>
+			</Panel>
+			<Label id="rtv_timer" class="rtv-vote-timer" text="{s:rtv_timer}" hittest="false" />
+			<Button id="rtv_vote_close" class="rtv-vote-close"><Label class="rtv-vote-close-label" text="Close" hittest="false" /></Button>
+		</Panel>
+	</Panel>
+</root>

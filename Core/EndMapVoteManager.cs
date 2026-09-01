@@ -8,10 +8,10 @@ using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 using CS2MenuManager.API.Class;
 using CS2MenuManager.API.Menu;
 using cs2_rockthevote.Core;
-using System.Data;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using System.Drawing;
+using System.Data;
 
 namespace cs2_rockthevote
 {
@@ -28,6 +28,9 @@ namespace cs2_rockthevote
         private readonly PluginState _pluginState;
         private readonly MapCooldown _mapCooldown;
         private readonly GameRules _gameRules;
+        private readonly CustomHud _customHud;
+        private readonly CustomHudClickListener _customHudClickListener;
+        private bool _activeVoteUsesPanorama = false;
         private Timer? Timer;
         private Timer? _nextVoteTimer;
         private Timer? _chatMapChoiceTimer;
@@ -61,6 +64,7 @@ namespace cs2_rockthevote
 
         private GeneralConfig _generalConfig = new();
         private EndOfMapConfig _endMapConfig = new();
+        private PanoramaMenuConfig _panoramaConfig = new();
         private RtvConfig _rtvConfig = new();
 
         public EndMapVoteManager
@@ -74,6 +78,8 @@ namespace cs2_rockthevote
             ExtendRoundTimeManager extendRoundTimeManager,
             TimeLimitManager timeLimitManager,
             GameRules gameRules,
+            CustomHud customHud,
+            CustomHudClickListener customHudClickListener,
             ILogger<EndMapVoteManager> logger
         )
         {
@@ -86,6 +92,8 @@ namespace cs2_rockthevote
             _extendRoundTimeManager = extendRoundTimeManager;
             _timeLimitManager = timeLimitManager;
             _gameRules = gameRules;
+            _customHud = customHud;
+            _customHudClickListener = customHudClickListener;
             _logger = logger;
         }
 
@@ -93,12 +101,74 @@ namespace cs2_rockthevote
         {
             _plugin = plugin;
             _plugin.AddCommand("revote", "Re-open the active map vote menu.", OnRevoteCommand);
+            _plugin.AddCommandListener("say", OnSayVote, HookMode.Pre);
+            _plugin.AddCommandListener("say_team", OnSayVote, HookMode.Pre);
+            _customHudClickListener.OnHudClicked += OnPanoramaHudClicked;
+        }
+
+        // Click path for the panorama vote panel. Raised by CustomHudClickListener from its
+        // CustomHudClicked-receiver hook, so the actual work is deferred to the next frame.
+        private void OnPanoramaHudClicked(int playerSlot, nint layoutPointer, string buttonId)
+        {
+            Server.NextFrame(() => HandlePanoramaClick(playerSlot, layoutPointer, buttonId));
+        }
+
+        private void HandlePanoramaClick(int playerSlot, nint layoutPointer, string buttonId)
+        {
+            try
+            {
+                //_logger.LogInformation(
+                //    "[RTV.EndMapVote] CustomHudClicked: button='{Button}' layout=0x{Layout:X} slot={Slot} voteActive={VoteActive} clickActive={ClickActive}",
+                //    buttonId, layoutPointer, playerSlot, _pluginState.EofVoteHappening, _customHud.ClickVotingActive);
+
+                if (!_activeVoteUsesPanorama || !_pluginState.EofVoteHappening || Timer is null)
+                    return;
+
+                if (!_customHud.ClickVotingActive)
+                    return;
+
+                // Only react to clicks on our own layout entity
+                if (!_customHud.MatchesLayout(layoutPointer))
+                {
+                    //_logger.LogInformation("[RTV.EndMapVote] CustomHudClicked layout mismatch (theirs 0x{Layout:X}), ignoring.", layoutPointer);
+                    return;
+                }
+
+                var player = Utilities.GetPlayerFromSlot(playerSlot);
+                if (player == null || !player.ReallyValid())
+                {
+                    //_logger.LogInformation("[RTV.EndMapVote] CustomHudClicked from slot {Slot} has no valid player, ignoring.", playerSlot);
+                    return;
+                }
+
+                if (buttonId == "rtv_vote_close")
+                {
+                    _customHud.SetVisibleForPlayer(player.Slot, false);
+                    return;
+                }
+
+                const string rowPrefix = "rtv_vote_";
+                if (buttonId.StartsWith(rowPrefix, StringComparison.Ordinal)
+                    && int.TryParse(buttonId.AsSpan(rowPrefix.Length), out int choice)
+                    && choice >= 1 && choice <= _currentVoteOptions.Count)
+                {
+                    MapVoted(player, _currentVoteOptions[choice - 1], _activeVoteIsRtv, allowRevote: true);
+                    return;
+                }
+
+                //_logger.LogInformation("[RTV.EndMapVote] CustomHudClicked button '{Button}' matched no vote row.", buttonId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "[RTV.EndMapVote] Failed to handle CustomHudClicked.");
+            }
         }
 
         public void OnConfigParsed(Config config)
         {
             _generalConfig = config.General;
             _endMapConfig = config.EndOfMapVote;
+            _panoramaConfig = config.PanoramaMenu;
             _rtvConfig = config.Rtv;
             _debugLogger = _generalConfig.DebugLogging ? _logger : NullLogger<EndMapVoteManager>.Instance;
 
@@ -133,6 +203,7 @@ namespace cs2_rockthevote
             _sortedTopVotes = new();
             TimeLeft = 0;
             mapsElected.Clear();
+            _activeVoteUsesPanorama = false;
             KillTimer();
             KillNextVoteTimer();
             KillIgnoreWinConditionsPollTimer();
@@ -142,6 +213,10 @@ namespace cs2_rockthevote
         public void Unload(Plugin plugin)
         {
             CloseAllActiveMenus();
+            plugin.RemoveCommandListener("say", OnSayVote, HookMode.Pre);
+            plugin.RemoveCommandListener("say_team", OnSayVote, HookMode.Pre);
+            _customHudClickListener.OnHudClicked -= OnPanoramaHudClicked;
+            _activeVoteUsesPanorama = false;
             _revoteMenuOpen.Clear();
             KillTimer();
             KillNextVoteTimer();
@@ -208,29 +283,76 @@ namespace cs2_rockthevote
             }
         }
 
+        private bool IsPanoramaMode()
+        {
+            return string.Equals(_endMapConfig.MenuType?.Trim(), "panorama", StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Chat-number voting applies only when a panorama vote could not enable click
+        // voting (click receiver hook unavailable), the panel is display-only then and
+        // chat is the input path.
+        private bool PanoramaChatFallbackActive()
+        {
+            return _activeVoteUsesPanorama && !_customHud.ClickVotingActive;
+        }
+
         private bool ShouldPrintChatMapChoices()
         {
-            return string.Equals(_endMapConfig.MenuType?.Trim(), "ChatMenu", StringComparison.OrdinalIgnoreCase)
+            bool chatDriven = string.Equals(_endMapConfig.MenuType?.Trim(), "ChatMenu", StringComparison.OrdinalIgnoreCase)
+                || PanoramaChatFallbackActive();
+            return chatDriven
                 && _endMapConfig.ChatMapChoiceReminder
                 && _endMapConfig.ChatMapChoiceInterval > 0;
         }
 
-        private void PrintChatMapChoices()
+        private void PrintChatMapChoices(CCSPlayerController? target = null)
         {
             if (_currentVoteOptions.Count == 0)
                 return;
 
-            Server.PrintToChatAll(_localizer.Localize("emv.hud.menu-title"));
+            void Print(string text)
+            {
+                if (target != null)
+                    target.PrintToChat(text);
+                else
+                    Server.PrintToChatAll(text);
+            }
+
+            Print(_localizer.Localize("emv.hud.menu-title"));
 
             for (int i = 0; i < _currentVoteOptions.Count; i++)
             {
                 string option = _currentVoteOptions[i];
                 int voteCount = Votes.TryGetValue(option, out int currentVotes) ? currentVotes : 0;
-                Server.PrintToChatAll($" {ChatColors.Lime}!{i + 1} {ChatColors.Default}- {ChatColors.Yellow}({ChatColors.Orange}{voteCount}{ChatColors.Yellow}) {ChatColors.Default}- {option}");
+                Print($" {ChatColors.Lime}!{i + 1} {ChatColors.Default}- {ChatColors.Yellow}({ChatColors.Orange}{voteCount}{ChatColors.Yellow}) {ChatColors.Default}- {option}");
             }
 
             if (_endMapConfig.EnableRevote)
-                Server.PrintToChatAll(_localizer.Localize("emv.revote"));
+                Print(_localizer.Localize("emv.revote"));
+        }
+
+        // Numeric chat voting (!1..!N), fallback input for a display-only panorama panel.
+        // When click voting is active, votes come only from panel clicks.
+        private HookResult OnSayVote(CCSPlayerController? player, CommandInfo info)
+        {
+            if (!PanoramaChatFallbackActive() || !_pluginState.EofVoteHappening || Timer is null)
+                return HookResult.Continue;
+
+            if (player == null || !player.ReallyValid())
+                return HookResult.Continue;
+
+            string text = info.GetArg(1).Trim();
+            if (text.StartsWith('!') || text.StartsWith('/'))
+                text = text[1..];
+
+            if (!int.TryParse(text, out int choice))
+                return HookResult.Continue;
+
+            if (choice < 1 || choice > _currentVoteOptions.Count)
+                return HookResult.Continue;
+
+            MapVoted(player, _currentVoteOptions[choice - 1], _activeVoteIsRtv, allowRevote: true);
+            return HookResult.Handled;
         }
 
         private void StartChatMapChoiceReminder()
@@ -360,6 +482,16 @@ namespace cs2_rockthevote
             if (!_endMapConfig.EnableRevote)
                 return;
 
+            // Re-show Panorama panel, the player clicks another row (chat list only
+            // when the vote is running in the chat-number fallback)
+            if (_activeVoteUsesPanorama)
+            {
+                _customHud.SetVisibleForPlayer(player.Slot, true);
+                if (PanoramaChatFallbackActive())
+                    PrintChatMapChoices(player);
+                return;
+            }
+
             // Already showing a revote menu for this player - their vote is active, ignore repeat requests
             if (!_revoteMenuOpen.Add(player.Slot))
                 return;
@@ -457,9 +589,29 @@ namespace cs2_rockthevote
             _playerVotes[slot] = mapName;
             Votes[mapName] += 1;
             RebuildSortedTopVotes();
-            player.PrintToChat(_localizer.LocalizeWithPrefix("emv.you-voted", mapName));
-            if (_endMapConfig.EnableRevote)
-                player.PrintToChat(_localizer.LocalizeWithPrefix("emv.revote"));
+
+            // The click-voting panorama panel gives its own feedback (voted-row highlight,
+            // live counters), so skip the chat confirmation there. The chat-number fallback
+            // still gets it.
+            if (!(_activeVoteUsesPanorama && _customHud.ClickVotingActive))
+            {
+                player.PrintToChat(_localizer.LocalizeWithPrefix("emv.you-voted", mapName));
+                if (_endMapConfig.EnableRevote)
+                    player.PrintToChat(_localizer.LocalizeWithPrefix("emv.revote"));
+            }
+
+            if (_activeVoteUsesPanorama)
+            {
+                _customHud.UpdateCounts();
+
+                // Persistent highlight on the chosen row while the panel stays open
+                int votedRow = _currentVoteOptions.IndexOf(mapName) + 1;
+                if (votedRow > 0)
+                    _customHud.SetVotedRow(slot, votedRow);
+
+                if (_generalConfig.HideHudAfterVote)
+                    _customHud.SetVisibleForPlayer(slot, false);
+            }
 
             // Keep the vote open for the full timer when revotes are enabled.
             if (!_endMapConfig.EnableRevote && Votes.Values.Sum() >= _canVote)
@@ -484,6 +636,12 @@ namespace cs2_rockthevote
                 Votes[votedMap] = count - 1;
 
             RebuildSortedTopVotes();
+
+            if (_activeVoteUsesPanorama)
+            {
+                _customHud.UpdateCounts();
+                _customHud.ClearVotedRow(slot);
+            }
         }
 
         public void KillTimer()
@@ -746,6 +904,10 @@ namespace cs2_rockthevote
                 mapsToShow = MaxOptionsHud;
             }
 
+            // The panorama layout has a fixed number of rows
+            if (IsPanoramaMode() && mapsToShow > CustomHud.MaxRows)
+                mapsToShow = CustomHud.MaxRows;
+
             int mapOptionsCount = canShowExtendOption ? mapsToShow - 1 : mapsToShow;
 
             // Get map list
@@ -778,6 +940,21 @@ namespace cs2_rockthevote
             int voteDuration = isRtv ? _rtvConfig.MapVoteDuration : _endMapConfig.VoteDuration;
             TimeLeft = voteDuration;
 
+            _activeVoteUsesPanorama = false;
+            if (IsPanoramaMode())
+            {
+                _activeVoteUsesPanorama = _customHud.Show(
+                    _localizer.Localize("emv.hud.menu-title"),
+                    _currentVoteOptions,
+                    option => Votes.TryGetValue(option, out int count) ? count : 0,
+                    clickVoting: _customHudClickListener.IsHooked);
+
+                if (_activeVoteUsesPanorama)
+                    _customHud.UpdateTimer(voteDuration);
+                else
+                    _logger.LogWarning("[RTV.EndMapVote] MenuType 'panorama' unavailable; falling back to the default menu display.");
+            }
+
             var players = ServerManager.ValidPlayers()
                 .Where(p => p != null && p.IsValid)
                 .ToList();
@@ -791,7 +968,8 @@ namespace cs2_rockthevote
                     if (live is null || !live.ReallyValid())
                         continue;
 
-                    DisplayVoteMenu(live, _currentVoteOptions, voteDuration, isRtv, allowRevote: false);
+                    if (!_activeVoteUsesPanorama)
+                        DisplayVoteMenu(live, _currentVoteOptions, voteDuration, isRtv, allowRevote: false);
 
                     if (_endMapConfig.SoundEnabled)
                     {
@@ -806,6 +984,10 @@ namespace cs2_rockthevote
 
             if (_endMapConfig.MenuType != "ChatMenu")
                 Server.PrintToChatAll(_localizer.LocalizeWithPrefix("emv.vote-started"));
+
+            // Chat instructions only when the panorama vote fell back to chat-number input
+            if (PanoramaChatFallbackActive())
+                PrintChatMapChoices();
 
             if (_endMapConfig.EnableHint)
             {
@@ -830,6 +1012,10 @@ namespace cs2_rockthevote
             Timer = _plugin?.AddTimer(1.0F, () =>
             {
                 TimeLeft = (int)Math.Ceiling(Math.Max(0.0, voteDeadline - Server.CurrentTime));
+
+                if (_activeVoteUsesPanorama)
+                    _customHud.UpdateTimer(TimeLeft);
+
                 if (TimeLeft <= 0)
                 {
                     _debugLogger.LogInformation("[RTV.EndMapVote] Vote-tick timer reached deadline. Deferring EndVote to next frame. isRtv={IsRtv}", isRtv);
@@ -862,6 +1048,14 @@ namespace cs2_rockthevote
         public void EndVote(bool isRtv)
         {
             CloseAllActiveMenus();
+
+            // Panorama: keep the panel up briefly to flash + highlight the winning row.
+            // The snapshot maps the winner back to its row after the list is cleared.
+            bool showPanoramaWinner = _activeVoteUsesPanorama && _customHud.IsActive;
+            var panoramaOptions = showPanoramaWinner ? _currentVoteOptions.ToList() : null;
+            if (!showPanoramaWinner)
+                _customHud.Destroy();
+            _activeVoteUsesPanorama = false;
 
             KillTimer();
             _currentVoteOptions.Clear();
@@ -918,6 +1112,13 @@ namespace cs2_rockthevote
 
             Server.PrintToChatAll(_localizer.LocalizeWithPrefix("emv.vote-ended", winner.Key, percent, totalVotes));
 
+            if (showPanoramaWinner)
+            {
+                int winnerRow = panoramaOptions!.IndexOf(winner.Key) + 1;
+                _customHud.ShowWinner(winnerRow);
+                _plugin?.AddTimer(6.0f, _customHud.Destroy, TimerFlags.STOP_ON_MAPCHANGE);
+            }
+
             if (winner.Key == extendOption)
             {
                 _nominationManager.MarkMapExtended();
@@ -955,7 +1156,7 @@ namespace cs2_rockthevote
                 {
                     if (_endMapConfig.ChangeMapImmediately)
                     {
-                        _debugLogger.LogInformation("[EndMapVote] Changing map immediately from end-of-map vote. winner={Winner}", winner.Key);
+                        _debugLogger.LogInformation("[RTV.EndMapVote] Changing map immediately from end-of-map vote. winner={Winner}", winner.Key);
                         _changeMapManager.ChangeNextMap();
                     }
                     else if (ignoreRoundWinConditions)
@@ -986,7 +1187,7 @@ namespace cs2_rockthevote
                         else // Timer for MapChangeDelay seconds
                         {
                             _debugLogger.LogInformation(
-                                "[EndMapVote] RTV map vote armed delayed map change. winner={Winner} delaySeconds={DelaySeconds}",
+                                "[RTV.EndMapVote] RTV map vote armed delayed map change. winner={Winner} delaySeconds={DelaySeconds}",
                                 winner.Key,
                                 delay
                             );

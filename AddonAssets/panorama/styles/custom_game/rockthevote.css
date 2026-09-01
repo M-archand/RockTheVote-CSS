@@ -1,0 +1,358 @@
+/* RockTheVote panorama vote panel styles (compiled into the Workshop Addon
+   alongside rockthevote.xml). */
+
+.rtv-vote-root
+{
+	width: 100%;
+	height: 100%;
+}
+
+/* Width model */
+#rtv_vote_dialog
+{
+	width: fit-children;
+	flow-children: down;
+	padding: 20px 24px;
+	background-color: #10161de8;
+	border: 1px solid #5db2d1cc;
+	box-shadow: #000000aa 0px 0px 30px 0px;
+}
+
+/* Default screen position (CenterRight) */
+.rtv-vote-dialog
+{
+	horizontal-align: right;
+	vertical-align: center;
+	margin-right: 40px;
+}
+
+.rtv-vote-kicker
+{
+	color: #d9aa45ff;
+	font-size: 16px;
+	font-weight: bold;
+	letter-spacing: 1px;
+	margin-bottom: 12px;
+	white-space: nowrap;
+}
+
+
+.rtv-vote-options
+{
+	flow-children: down;
+	margin-bottom: 14px;
+}
+
+.rtv-vote-row
+{
+	width: 372px;
+	min-height: 32px;
+	padding: 6px 10px;
+	margin-bottom: 4px;
+	background-color: #20313d99;
+	border: 1px solid #78a7ba44;
+	transition-property: background-color, border;
+	transition-duration: 0.1s;
+}
+
+/* Uniform row width steps */
+.rtv-vote-row.rtv-w-240 { width: 240px; }
+.rtv-vote-row.rtv-w-280 { width: 280px; }
+.rtv-vote-row.rtv-w-320 { width: 320px; }
+.rtv-vote-row.rtv-w-360 { width: 360px; }
+.rtv-vote-row.rtv-w-400 { width: 400px; }
+.rtv-vote-row.rtv-w-440 { width: 440px; }
+.rtv-vote-row.rtv-w-480 { width: 480px; }
+.rtv-vote-row.rtv-w-520 { width: 520px; }
+.rtv-vote-row.rtv-w-560 { width: 560px; }
+.rtv-vote-row.rtv-w-600 { width: 600px; }
+.rtv-vote-row.rtv-w-640 { width: 640px; }
+
+.rtv-vote-row:hover
+{
+	background-color: #315061ff;
+	border: 1px solid #96d8f2ff;
+}
+
+.rtv-vote-row-label
+{
+	color: #a9f5a9ff;
+	font-size: 18px;
+	white-space: nowrap;
+	max-width: 520px;
+	/* Reserves the right-aligned counter's zone */
+	margin-right: 46px;
+}
+
+.rtv-vote-count
+{
+	horizontal-align: right;
+	vertical-align: center;
+	min-width: 34px;
+	padding: 2px 6px;
+	background-color: #10161dcc;
+	border: 1px solid #78a7ba66;
+	color: #eaf4f7ff;
+	font-size: 16px;
+	text-align: center;
+}
+
+/* Applied per-player by the server to the row that player voted for */
+.rtv-vote-row.rtv-row-voted
+{
+	background-color: #8a6d2be0;
+	border: 1px solid #f2d27fff;
+}
+
+/* Winner reveal */
+@keyframes 'rtv-winner-flash'
+{
+	0%
+	{
+		background-color: #2f5a44ee;
+		border: 1px solid #9df2b0ff;
+	}
+	50%
+	{
+		background-color: #4a8f66f5;
+		border: 1px solid #c8ffd9ff;
+	}
+	100%
+	{
+		background-color: #2f5a44ee;
+		border: 1px solid #9df2b0ff;
+	}
+}
+
+.rtv-vote-row.rtv-row-winner
+{
+	background-color: #2f5a44ee;
+	border: 1px solid #9df2b0ff;
+	animation-name: rtv-winner-flash;
+	animation-duration: 1.0s;
+	animation-timing-function: ease-in-out;
+	animation-iteration-count: 5;
+}
+
+/* Applied by the server to rows beyond the current vote's option count */
+.rtv-row-hidden
+{
+	visibility: collapse;
+}
+
+
+/* Countdown timer */
+/* Alignment resolves against the dialog's content box */
+.rtv-vote-timer
+{
+	ignore-parent-flow: true;
+	horizontal-align: left;
+	vertical-align: bottom;
+	margin-left: 0px;
+	margin-bottom: 0px;
+	color: #eaf4f7ff;
+	font-size: 22px;
+	font-weight: bold;
+}
+
+.rtv-vote-close
+{
+	horizontal-align: right;
+	padding: 6px 14px;
+	background-color: #523039dd;
+	border: 1px solid #78a7ba44;
+	transition-property: background-color, border;
+	transition-duration: 0.1s;
+}
+
+.rtv-vote-close:hover
+{
+	background-color: #6e3f4cff;
+	border: 1px solid #96d8f2ff;
+}
+
+.rtv-vote-close-label
+{
+	color: #eaf4f7ff;
+	font-size: 14px;
+}
+
+/* Applied per-player by the server to hide the dialog after that player votes
+   or clicks Close */
+.rtv-vote-dialog.rtv-dialog-hidden
+{
+	visibility: collapse;
+}
+
+/* Row size variants */
+.rtv-vote-row.rtv-row-compact
+{
+	min-height: 24px;
+	padding: 3px 8px;
+	margin-bottom: 2px;
+}
+
+.rtv-vote-row-label.rtv-label-compact
+{
+	font-size: 15px;
+}
+
+.rtv-vote-row.rtv-row-large
+{
+	min-height: 42px;
+	padding: 9px 12px;
+	margin-bottom: 6px;
+}
+
+.rtv-vote-row-label.rtv-label-large
+{
+	font-size: 22px;
+}
+
+.rtv-vote-row.rtv-row-xlarge
+{
+	min-height: 52px;
+	padding: 12px 14px;
+	margin-bottom: 8px;
+}
+
+.rtv-vote-row-label.rtv-label-xlarge
+{
+	font-size: 26px;
+}
+
+/* Option text color palette */
+.rtv-vote-row-label.rtv-color-white { color: #f4f7f8ff; }
+.rtv-vote-row-label.rtv-color-green { color: #a9f5a9ff; }
+.rtv-vote-row-label.rtv-color-cyan { color: #7fd8f2ff; }
+.rtv-vote-row-label.rtv-color-yellow { color: #f2e27fff; }
+.rtv-vote-row-label.rtv-color-orange { color: #f2b06aff; }
+.rtv-vote-row-label.rtv-color-red { color: #f28a8aff; }
+.rtv-vote-row-label.rtv-color-magenta { color: #e39af0ff; }
+.rtv-vote-row-label.rtv-color-blue { color: #8fa8f5ff; }
+
+/* Header text color palette */
+.rtv-vote-kicker.rtv-color-white { color: #f4f7f8ff; }
+.rtv-vote-kicker.rtv-color-green { color: #a9f5a9ff; }
+.rtv-vote-kicker.rtv-color-cyan { color: #7fd8f2ff; }
+.rtv-vote-kicker.rtv-color-yellow { color: #f2e27fff; }
+.rtv-vote-kicker.rtv-color-orange { color: #f2b06aff; }
+.rtv-vote-kicker.rtv-color-red { color: #f28a8aff; }
+.rtv-vote-kicker.rtv-color-magenta { color: #e39af0ff; }
+.rtv-vote-kicker.rtv-color-blue { color: #8fa8f5ff; }
+
+/* Header size variants */
+.rtv-vote-kicker.rtv-header-compact
+{
+	font-size: 13px;
+	margin-bottom: 8px;
+}
+
+.rtv-vote-kicker.rtv-header-large
+{
+	font-size: 22px;
+	margin-bottom: 14px;
+}
+
+.rtv-vote-kicker.rtv-header-xlarge
+{
+	font-size: 28px;
+	margin-bottom: 16px;
+}
+
+/* Screen-position variants */
+.rtv-vote-dialog.rtv-pos-center-top
+{
+	horizontal-align: center;
+	vertical-align: top;
+	margin-top: 132px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	margin-left: 0px;
+}
+
+.rtv-vote-dialog.rtv-pos-center-middle
+{
+	horizontal-align: center;
+	vertical-align: center;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	margin-left: 0px;
+}
+
+.rtv-vote-dialog.rtv-pos-center-bottom
+{
+	horizontal-align: center;
+	vertical-align: bottom;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 100px;
+	margin-left: 0px;
+}
+
+.rtv-vote-dialog.rtv-pos-top-left
+{
+	horizontal-align: left;
+	vertical-align: top;
+	margin-top: 40px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	margin-left: 40px;
+}
+
+.rtv-vote-dialog.rtv-pos-top-right
+{
+	horizontal-align: right;
+	vertical-align: top;
+	margin-top: 40px;
+	margin-right: 40px;
+	margin-bottom: 0px;
+	margin-left: 0px;
+}
+
+.rtv-vote-dialog.rtv-pos-bottom-left
+{
+	horizontal-align: left;
+	vertical-align: bottom;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 40px;
+	margin-left: 40px;
+}
+
+.rtv-vote-dialog.rtv-pos-bottom-right
+{
+	horizontal-align: right;
+	vertical-align: bottom;
+	margin-top: 0px;
+	margin-right: 40px;
+	margin-bottom: 40px;
+	margin-left: 0px;
+}
+
+.rtv-vote-dialog.rtv-pos-center-left
+{
+	horizontal-align: left;
+	vertical-align: center;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	margin-left: 40px;
+}
+
+.rtv-vote-dialog.rtv-pos-center-right
+{
+	horizontal-align: right;
+	vertical-align: center;
+	margin-top: 0px;
+	margin-right: 40px;
+	margin-bottom: 0px;
+	margin-left: 0px;
+}
+
+/* Invisible layout-revision marker (see the comment in the xml) */
+.rtv-version
+{
+	visibility: collapse;
+}
