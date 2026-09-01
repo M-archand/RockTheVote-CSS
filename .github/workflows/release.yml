@@ -19,9 +19,9 @@ jobs:
       - name: Extract version from ModuleVersion
         id: version
         run: |
-          VERSION=$(grep -oP 'ModuleVersion\s*=>\s*\$?"\K[^"]+' Plugin.cs | head -n1)
+          VERSION=$(grep -oP 'ModuleVersion\s*=>\s*\$?"\K[^"]+' src/Plugin.cs | head -n1)
           if [ -z "$VERSION" ]; then
-            echo "::error::Could not find ModuleVersion in Plugin.cs"
+            echo "::error::Could not find ModuleVersion in src/Plugin.cs"
             exit 1
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
@@ -52,11 +52,13 @@ jobs:
 
           # CSS install layout: archive root holds RockTheVote-v{version}/
           #   addons/counterstrikesharp/plugins/RockTheVote/ -> plugin dll + deps + lang + maplist example
+          #   addons/counterstrikesharp/gamedata/            -> customhud.json (Panorama click hook signatures)
           # Note: CS2MenuManager is a required separate dependency and is NOT bundled here.
           rm -rf package
           ROOT="package/${FOLDER}"
           PLUGIN_DIR="${ROOT}/addons/counterstrikesharp/plugins/RockTheVote"
-          mkdir -p "${PLUGIN_DIR}"
+          GAMEDATA_DIR="${ROOT}/addons/counterstrikesharp/gamedata"
+          mkdir -p "${PLUGIN_DIR}" "${GAMEDATA_DIR}"
 
           # Plugin assembly + runtime deps manifest (pdb excluded)
           cp "${PLUGIN_OUT}/RockTheVote.dll" "${PLUGIN_DIR}/"
@@ -65,6 +67,7 @@ jobs:
           # Resources
           cp -r "${PLUGIN_OUT}/lang" "${PLUGIN_DIR}/"
           cp "${PLUGIN_OUT}/maplist.example.txt" "${PLUGIN_DIR}/"
+          cp "${PLUGIN_OUT}/gamedata/customhud.json" "${GAMEDATA_DIR}/"
 
           cd package
           zip -r "../${FOLDER}.zip" "${FOLDER}"

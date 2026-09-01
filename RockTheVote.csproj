@@ -13,8 +13,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="lang\**\*.*" CopyToOutputDirectory="PreserveNewest" />
-    <None Update="gamedata\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="lang/**/*.*" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="gamedata/**/*.*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
