@@ -34,12 +34,13 @@ namespace cs2_rockthevote
             _config = config.MapChooser;
             _permissions = _config.Permissions;
 
-            if (string.IsNullOrWhiteSpace(_config.Command))
+            var aliases = CommandAliasUtility.Expand(_config.Command);
+            if (aliases.Count == 0)
                 return;
 
             Server.NextFrame(() =>
             {
-                foreach (var alias in _config.Command.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                foreach (var alias in aliases)
                 {
                     // Skip aliases already registered
                     if (_plugin == null || _registeredAliases.Contains(alias))

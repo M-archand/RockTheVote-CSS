@@ -63,7 +63,7 @@ namespace cs2_rockthevote
         public bool EnabledInWarmup { get; set; } = false;
         public int MinPlayers { get; set; } = 0;
         public int MinRounds { get; set; } = 0;
-        public string Permission { get; set; } = "@css/vip";
+        public string Permission { get; set; } = "@css/vip, @css/votemap";
 
         [JsonIgnore]
         public string[] Permissions => PermissionUtility.Parse(Permission);
@@ -79,7 +79,7 @@ namespace cs2_rockthevote
         public bool EnableCountdown { get; set; } = true;
         public string CountdownType { get; set; } = "chat";
         public int ChatCountdownInterval { get; set; } = 15;
-        public string Permission { get; set; } = "@css/vip";
+        public string Permission { get; set; } = "@css/vip,@css/votextend";
 
         [JsonIgnore]
         public string[] Permissions => PermissionUtility.Parse(Permission);
@@ -91,7 +91,7 @@ namespace cs2_rockthevote
         public bool EnabledInWarmup { get; set; } = true;
         public string MenuType { get; set; } = "WasdMenu";
         public int NominateLimit { get; set; } = 1;
-        public string Permission { get; set; } = "";
+        public string Permission { get; set; } = "@css/vip,@css/nominate";
 
         [JsonIgnore]
         public string[] Permissions => PermissionUtility.Parse(Permission);
@@ -99,7 +99,9 @@ namespace cs2_rockthevote
 
     public class MapChooserConfig
     {
-        public string Command { get; set; } = "mapmenu,mm";
+        // Accepts ["1", "2", "3"] or "1,2,3". The "css_" prefix is optional.
+        [JsonConverter(typeof(StringListConverter))]
+        public List<string> Command { get; set; } = new() { "mapmenu", "mm" };
         public string MenuType { get; set; } = "WasdMenu";
         public string Permission { get; set; } = "@css/changemap";
 
@@ -126,7 +128,7 @@ namespace cs2_rockthevote
 
     public class GeneralConfig
     {
-        public string AdminPermission { get; set; } = "@css/root";
+        public string AdminPermission { get; set; } = "@css/root,@css/admin";
 
         [JsonIgnore]
         public string[] AdminPermissions => PermissionUtility.Parse(AdminPermission);
@@ -139,7 +141,9 @@ namespace cs2_rockthevote
         public string[] DisabledExtensionMaps => PermissionUtility.Parse(DisableMapExtensions);
         public int RoundTimeExtension { get; set; } = 15;
         public int MapsInCoolDown { get; set; } = 3;
-        public List<string> CooldownCommands { get; set; } = new() { "css_cooldown" };
+        // Accepts ["1", "2", "3"] or "1,2,3". The "css_" prefix is optional.
+        [JsonConverter(typeof(StringListConverter))]
+        public List<string> CooldownCommands { get; set; } = new() { "cooldown", "cd" };
         public bool HideHudAfterVote { get; set; } = true;
         public bool RandomStartMap { get; set; } = false;
         public bool IncludeSpectator { get; set; } = true;

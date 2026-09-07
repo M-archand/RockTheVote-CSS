@@ -41,14 +41,14 @@ namespace cs2_rockthevote
 
         public void OnConfigParsed(Config config)
         {
-            _commands = config.General.CooldownCommands;
+            _commands = CommandAliasUtility.Expand(config.General.CooldownCommands);
 
             if (_commands.Count == 0)
                 return;
 
             Server.NextFrame(() =>
             {
-                foreach (var alias in _commands.Select(x => x.Trim()).Where(x => !string.IsNullOrEmpty(x)))
+                foreach (var alias in _commands)
                 {
                     // Skip aliases already registered
                     if (_plugin == null || _registeredAliases.Contains(alias))
