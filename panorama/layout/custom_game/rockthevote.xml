@@ -4,7 +4,7 @@
 	</styles>
 	<Panel class="rtv-vote-root" hittest="false">
 		<!-- Version marker: invisible in-game, visible in a decompile so a mounted addon's revision can be identified. Bump when editing. -->
-		<Label class="rtv-version" text="rockthevote revision 1" hittest="false" />
+		<Label class="rtv-version" text="rockthevote revision 2" hittest="false" />
 		<Panel id="rtv_vote_dialog" class="rtv-vote-dialog" hittest="false">
 			<Label id="rtv_header" class="rtv-vote-kicker" text="{s:rtv_header}" hittest="false" />
 			<Panel class="rtv-vote-options" hittest="false">
@@ -21,6 +21,22 @@
 			</Panel>
 			<Label id="rtv_timer" class="rtv-vote-timer" text="{s:rtv_timer}" hittest="false" />
 			<Button id="rtv_vote_close" class="rtv-vote-close"><Label class="rtv-vote-close-label" text="Close" hittest="false" /></Button>
+		</Panel>
+		<!-- RTV in-progress toast  -->
+		<Panel id="rtv_toast" class="rtv-toast" hittest="false">
+			<Label id="rtv_toast_header" class="rtv-toast-header" text="{s:rtv_toast_header}" hittest="false" />
+			<Panel class="rtv-toast-desc-row" hittest="false">
+				<Label id="rtv_toast_desc" class="rtv-toast-text" text="{s:rtv_toast_desc}" hittest="false" />
+				<Label id="rtv_toast_desc_num" class="rtv-toast-text rtv-toast-desc-num" text="{s:rtv_toast_desc_num}" hittest="false" />
+			</Panel>
+			<Panel class="rtv-toast-instr-row" hittest="false">
+				<Label id="rtv_toast_instr" class="rtv-toast-text" text="{s:rtv_toast_instr}" hittest="false" />
+				<Label id="rtv_toast_instr_cmd" class="rtv-toast-text rtv-toast-instr-cmd" text="{s:rtv_toast_instr_cmd}" hittest="false" />
+				<Label id="rtv_toast_instr_post" class="rtv-toast-text" text="{s:rtv_toast_instr_post}" hittest="false" />
+			</Panel>
+			<Panel id="rtv_toast_bar_track" class="rtv-toast-bar-track" hittest="false">
+				<Panel id="rtv_toast_bar" class="rtv-toast-bar" hittest="false" />
+			</Panel>
 		</Panel>
 	</Panel>
 </root>

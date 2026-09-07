@@ -63,7 +63,9 @@
   "rtv.cooldown": "{lightred}Команда на перезарядке. (осталось {white}{0}{red} секунд)",
   "rtv.time-up": "{lightred}Недостаточно игроков проголосовали за отведенное время.",
   "rtv.ui-question": "другая карта",
-  "rtv.instructions": "Используйте {lime}!rtv {default}, чтобы проголосовать!",
+  "rtv.instructions": "Используйте {0}, чтобы проголосовать!",
+  "rtv.panorama-header": "RTV активен",
+  "rtv.panorama-descripition": "Осталось голосов: {0}",
 
   "emv.you-voted": "Вы проголосовали за {0}",
   "emv.vote-started": "Голосование за следующую карту началось, сделайте свой выбор!",

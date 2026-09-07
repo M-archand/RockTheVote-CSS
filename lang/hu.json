@@ -63,7 +63,9 @@
   "rtv.cooldown": "{lightred}A parancs lehűlési időn van. ({white}{0}{red} másodperc van hátra)",
   "rtv.time-up": "{lightred}Nem szavazott elég játékos az időkorlát alatt.",
   "rtv.ui-question": "egy másik pálya",
-  "rtv.instructions": "Használd a {lime}!rtv {default} parancsot a szavazáshoz!",
+  "rtv.instructions": "Használd a {0} parancsot a szavazáshoz!",
+  "rtv.panorama-header": "RTV aktív",
+  "rtv.panorama-descripition": "Még szükséges szavazatok: {0}",
 
   "emv.you-voted": "A következőre szavaztál: {0}",
   "emv.vote-started": "Elkezdődött a szavazás a következő térképre, válassz!",

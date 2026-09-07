@@ -63,7 +63,9 @@
   "rtv.cooldown": "{lightred}指令冷卻中。（{white}{0}{red} 秒剩餘）",
   "rtv.time-up": "{lightred}在時間內沒有足夠的玩家投票。",
   "rtv.ui-question": "換成其他地圖",
-  "rtv.instructions": "使用 {lime}!rtv {default} 來投票！",
+  "rtv.instructions": "使用 {0} 來投票！",
+  "rtv.panorama-header": "RTV 已啟動",
+  "rtv.panorama-descripition": "還需票數：{0}",
 
   "emv.you-voted": "你投給了 {green}{0}",
   "emv.vote-started": "下一張地圖投票已開始，快來選擇！",

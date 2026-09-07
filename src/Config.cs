@@ -7,13 +7,14 @@ namespace cs2_rockthevote
     {
         public bool Enabled { get; set; } = true;
         public bool EnabledInWarmup { get; set; } = false;
-        public bool EnablePanorama { get; set; } = false;
+        public bool EnablePanoramaVote { get; set; } = false;
+        public bool EnablePanoramaToast { get; set; } = false;
         public int MinPlayers { get; set; } = 0;
         public int MinRounds { get; set; } = 0;
         public bool ChangeAtRoundEnd { get; set; } = false;
         public int MapChangeDelay { get; set; } = 5;
         public bool SoundEnabled { get; set; } = false;
-        public float SoundVolume { get; set; } = 1.0F;
+        public float SoundVolume { get; set; } = 0.5F;
         public string SoundPath { get; set; } = "sounds/vo/announcer/cs2_classic/felix_broken_fang_pick_1_map_tk01.vsnd_c";
         public int MapsToShow { get; set; } = 6;
         public bool AlwaysActive { get; set; } = true;
@@ -109,12 +110,17 @@ namespace cs2_rockthevote
     // Shared settings for every menu using the panorama custom hud
     public class PanoramaMenuConfig
     {
-        public string LayoutResource { get; set; } = "panorama/layout/custom_game/rockthevote.xml";
-        public string MenuPosition { get; set; } = "CenterLeft";
-        public string HeaderSize { get; set; } = "extralarge";
-        public string HeaderColor { get; set; } = "orange";
-        public string RowSize { get; set; } = "large";
-        public string RowColor { get; set; } = "green";
+        public string AddonName { get; set; } = "panorama/layout/custom_game/rockthevote.xml";
+        public string MapVoteMenuPosition { get; set; } = "CenterLeft";
+        public string MapVoteHeaderSize { get; set; } = "extralarge";
+        public string MapVoteHeaderColor { get; set; } = "orange";
+        public string MapVoteRowSize { get; set; } = "large";
+        public string MapVoteRowColor { get; set; } = "green";
+        public string RtvPosition { get; set; } = "CenterRight";
+        public string RtvMapVoteHeaderSize { get; set; } = "large";
+        public string RtvMapVoteHeaderColor { get; set; } = "orange";
+        public string RtvColor { get; set; } = "white";
+        public string RtvSize { get; set; } = "normal";
     }
 
     public class GeneralConfig

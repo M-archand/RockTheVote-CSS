@@ -871,7 +871,7 @@ namespace cs2_rockthevote
             _currentVoteOptions.Clear();
             _activeVoteIsRtv = isRtv;
 
-            if (_rtvConfig.EnablePanorama)
+            if (_rtvConfig.EnablePanoramaVote)
             {
                 Server.ExecuteCommand("sv_allow_votes 0");
                 Server.ExecuteCommand("sv_vote_allow_in_warmup 0");

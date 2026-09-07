@@ -29,6 +29,7 @@ namespace cs2_rockthevote
         private readonly PluginState _pluginState;
         private readonly AFKManager _afk;
         private readonly PanoramaVote _panoramaVote;
+        private readonly Core.RtvToast _rtvToast;
         private RtvConfig _config = new();
         private GeneralConfig _generalConfig = new();
         private AsyncVoteManager? _voteManager;
@@ -44,7 +45,7 @@ namespace cs2_rockthevote
         public int TimeLeft => (int)Math.Max(0, (_rtvEndTime - DateTime.UtcNow).TotalSeconds);
 
 
-        public RockTheVoteCommand(GameRules gameRules, EndMapVoteManager endmapVoteManager, StringLocalizer localizer, PluginState pluginState, AFKManager afkManager, PanoramaVote panoramaVote, ILogger<RockTheVoteCommand> logger)
+        public RockTheVoteCommand(GameRules gameRules, EndMapVoteManager endmapVoteManager, StringLocalizer localizer, PluginState pluginState, AFKManager afkManager, PanoramaVote panoramaVote, Core.RtvToast rtvToast, ILogger<RockTheVoteCommand> logger)
         {
             _localizer = localizer;
             _gameRules = gameRules;
@@ -52,6 +53,7 @@ namespace cs2_rockthevote
             _pluginState = pluginState;
             _afk = afkManager;
             _panoramaVote = panoramaVote;
+            _rtvToast = rtvToast;
             _logger = logger;
         }
 
@@ -72,7 +74,7 @@ namespace cs2_rockthevote
             _config = config.Rtv;
             _generalConfig = config.General;
 
-            if (_config.EnablePanorama && _config.AlwaysActive)
+            if (_config.EnablePanoramaVote && _config.AlwaysActive)
             {
                 _logger.LogWarning("[RTV.rtvCommand] Rtv.EnablePanorama and Rtv.AlwaysActive are both enabled in your config but they are incompatible; forcing AlwaysActive=false so the panorama vote is used.");
                 _config.AlwaysActive = false;
@@ -137,6 +139,12 @@ namespace cs2_rockthevote
             return (int)Math.Ceiling(eligiblePlayers * (_config.VotePercentage / 100.0));
         }
 
+        private int CurrentRemainingVotes()
+        {
+            int required = RequiredYesVotes(Math.Max(EligibleCount(TreatVotedPlayersAsActive()), 0));
+            return Math.Max(required - (_voteManager?.VoteCount ?? 0), 0);
+        }
+
         private void StartRtvTimer()
         {
             _pluginState.RtvVoteHappening = true;
@@ -154,6 +162,7 @@ namespace cs2_rockthevote
 
                 if (!_voteManager!.VotesAlreadyReached)
                 {
+                    _rtvToast.Hide();
                     Server.PrintToChatAll(_localizer.LocalizeWithPrefix("rtv.time-up"));
                     ActivateCooldown();
                 }
@@ -173,7 +182,7 @@ namespace cs2_rockthevote
             try
             {
                 bool alwaysActive = _config.AlwaysActive;
-                bool usePanorama = _config.EnablePanorama && !alwaysActive;
+                bool usePanorama = _config.EnablePanoramaVote && !alwaysActive;
 
                 if (player == null)
                     return;
@@ -307,18 +316,21 @@ namespace cs2_rockthevote
                             else if (alwaysActive)
                                 StartReminderTimer();
                             Server.PrintToChatAll($"{_localizer.LocalizeWithPrefix("rtv.rocked-the-vote", player.PlayerName)} {_localizer.Localize("general.votes-needed", result.VoteCount, requiredYesVotes)}");
-                            Server.PrintToChatAll($"{_localizer.LocalizeWithPrefix("rtv.instructions")}");
+                            Server.PrintToChatAll($"{_localizer.LocalizeWithPrefix("rtv.instructions", $"{ChatColors.Lime}!rtv{ChatColors.Default}")}");
                             // Early pass if threshold met
                             if (result.VoteCount >= requiredYesVotes)
                             {
                                 if (!alwaysActive)
                                     StopRtvTimer();
                                 StopReminderTimer();
+                                _rtvToast.Hide();
                                 _endmapVoteManager.StartVote(isRtv: true);
                                 Server.PrintToChatAll(_localizer.LocalizeWithPrefix("rtv.votes-reached"));
                             }
+                            else
+                                _rtvToast.ShowOrUpdate(Math.Max(requiredYesVotes - result.VoteCount, 0), CurrentRemainingVotes);
                             break;
-                        
+
 
                         case VoteResultEnum.AlreadyAddedBefore:
                             player.PrintToChat($"{_localizer.LocalizeWithPrefix("rtv.already-rocked-the-vote")} {_localizer.Localize("general.votes-needed", result.VoteCount, requiredYesVotes)}");
@@ -328,9 +340,12 @@ namespace cs2_rockthevote
                                 if (!alwaysActive)
                                     StopRtvTimer();
                                 StopReminderTimer();
+                                _rtvToast.Hide();
                                 _endmapVoteManager.StartVote(isRtv: true);
                                 Server.PrintToChatAll(_localizer.LocalizeWithPrefix("rtv.votes-reached"));
                             }
+                            else
+                                _rtvToast.ShowOrUpdate(Math.Max(requiredYesVotes - result.VoteCount, 0), CurrentRemainingVotes);
                             break;
 
                         case VoteResultEnum.VotesAlreadyReached:
@@ -344,6 +359,7 @@ namespace cs2_rockthevote
                             if (!alwaysActive)
                                 StopRtvTimer();
                             StopReminderTimer();
+                            _rtvToast.Hide();
                             _endmapVoteManager.StartVote(isRtv: true);
                             Server.PrintToChatAll($"{_localizer.LocalizeWithPrefix("rtv.rocked-the-vote", player.PlayerName)} {_localizer.Localize("general.votes-needed", result.VoteCount, requiredYesVotes)}");
                             Server.PrintToChatAll(_localizer.LocalizeWithPrefix("rtv.votes-reached"));
@@ -529,7 +545,7 @@ namespace cs2_rockthevote
             if (_voteManager == null || !_config.Enabled)
                 return;
 
-            bool usePanorama = _config.EnablePanorama && !_config.AlwaysActive;
+            bool usePanorama = _config.EnablePanoramaVote && !_config.AlwaysActive;
             if (usePanorama)
                 return;
 
@@ -549,6 +565,7 @@ namespace cs2_rockthevote
             if (!_config.AlwaysActive)
                 StopRtvTimer();
             StopReminderTimer();
+            _rtvToast.Hide();
             _endmapVoteManager.StartVote(isRtv: true);
             Server.PrintToChatAll(_localizer.LocalizeWithPrefix("rtv.votes-reached"));
         }
@@ -585,6 +602,7 @@ namespace cs2_rockthevote
                 return;
             }
 
+            _rtvToast.UpdateRemaining(remaining);
             Server.PrintToChatAll(_localizer.LocalizeWithPrefix("rtv.in-progress", remaining));
         }
 
@@ -619,7 +637,7 @@ namespace cs2_rockthevote
             if (player == null)
                 return;
 
-            bool usePanorama = _config.EnablePanorama && !_config.AlwaysActive;
+            bool usePanorama = _config.EnablePanoramaVote && !_config.AlwaysActive;
 
             if (!usePanorama)
             {
@@ -630,6 +648,10 @@ namespace cs2_rockthevote
                     try
                     {
                         TryPassByThreshold();
+
+                        // Pool shrank, so the toast's "votes needed" line may be stale
+                        if (_rtvToast.IsActive && _voteManager != null && !_voteManager.VotesAlreadyReached)
+                            _rtvToast.UpdateRemaining(CurrentRemainingVotes());
                     }
                     catch (Exception ex)
                     {

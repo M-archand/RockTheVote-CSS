@@ -63,7 +63,9 @@
   "rtv.cooldown": "{lightred}Komanda atrodas nogaidīšanas periodā. (atlikušas {white}{0}{red} sekundes)",
   "rtv.time-up": "{lightred}Laika ierobežojumā nav nobalsojis pietiekami daudz spēlētāju.",
   "rtv.ui-question": "cita karte",
-  "rtv.instructions": "Izmanto {lime}!rtv {default}, lai nobalsotu!",
+  "rtv.instructions": "Izmanto {0}, lai nobalsotu!",
+  "rtv.panorama-header": "RTV aktīvs",
+  "rtv.panorama-descripition": "Vēl vajadzīgas balsis: {0}",
 
   "emv.you-voted": "Jūs balsojāt par {0}",
   "emv.vote-started": "Balsošana par nākamo karti ir sākusies, izdari savu izvēli!",

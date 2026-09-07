@@ -63,7 +63,9 @@
   "rtv.cooldown": "{lightred}Command is on cooldown. ({white}{0}{red} seconds remaining)",
   "rtv.time-up": "{lightred}Not enough players voted during the time limit.",
   "rtv.ui-question": "a different map",
-  "rtv.instructions": "Use {lime}!rtv {default} to cast your vote!",
+  "rtv.instructions": "Use {0} to cast your vote.",
+  "rtv.panorama-header": "RTV Active (change map)",
+  "rtv.panorama-descripition": "Votes needed: {0}",
 
   "emv.you-voted": "You voted for {green}{0}",
   "emv.vote-started": "Voting for the next map has started, make your pick!    ",

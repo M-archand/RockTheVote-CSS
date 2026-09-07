@@ -63,7 +63,9 @@
     "rtv.cooldown": "{lightred}El comando está en espera. ({white}{0}{red} segundos restantes)",
     "rtv.time-up": "{lightred}No hubo suficientes jugadores votando durante el tiempo límite.",
     "rtv.ui-question": "un mapa diferente",
-    "rtv.instructions": "Usa {lime}!rtv {default} para emitir tu voto!",
+    "rtv.instructions": "Usa {0} para emitir tu voto!",
+    "rtv.panorama-header": "RTV activado",
+    "rtv.panorama-descripition": "Votos faltantes: {0}",
 
     "emv.you-voted": "Votaste por {0}",
     "emv.vote-started": "¡Ya empezó la votación para el próximo mapa, haz tu elección!",

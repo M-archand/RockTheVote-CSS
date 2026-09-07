@@ -1,6 +1,10 @@
 /* RockTheVote panorama vote panel styles (compiled into the Workshop Addon
    alongside rockthevote.xml). */
 
+/* ------------------------------------------------------------------ */
+/* Map Vote Menu                                                      */
+/* ------------------------------------------------------------------ */
+
 .rtv-vote-root
 {
 	width: 100%;
@@ -350,6 +354,236 @@
 	margin-bottom: 0px;
 	margin-left: 0px;
 }
+
+/* ------------------------------------------------------------------ */
+/* RTV in-progress toast                                              */
+/* ------------------------------------------------------------------ */
+
+.rtv-toast
+{
+	visibility: collapse;
+	width: fit-children;
+	flow-children: down;
+	padding: 14px 18px;
+	background-color: #10161de8;
+	border: 1px solid #5db2d1cc;
+	horizontal-align: left
+	vertical-align: top;
+	margin-right: 4px;
+}
+
+.rtv-toast.rtv-toast-on
+{
+	visibility: visible;
+}
+
+.rtv-toast-header
+{
+	color: #d9aa45ff;
+	font-size: 16px;
+	font-weight: bold;
+	letter-spacing: 1px;
+	margin-bottom: 8px;
+	white-space: nowrap;
+}
+
+.rtv-toast-text
+{
+	color: #eaf4f7ff;
+	font-size: 14px;
+	white-space: nowrap;
+}
+
+.rtv-toast-desc-row
+{
+	flow-children: right;
+	margin-bottom: 4px;
+}
+
+.rtv-toast-text.rtv-toast-desc-num
+{
+	color: #a9f5a9ff;
+	margin-left: 5px;
+}
+
+.rtv-toast-instr-row
+{
+	flow-children: right;
+}
+
+/* The "!rtv" command inside the instructions line */
+.rtv-toast-text.rtv-toast-instr-cmd
+{
+	color: #a9f5a9ff;
+}
+
+/* Word gap between the split instruction labels */
+.rtv-toast-text.rtv-gap
+{
+	margin-left: 4px;
+}
+
+/* Header size variants */
+.rtv-toast-header.rtv-header-compact { font-size: 13px; margin-bottom: 6px; }
+.rtv-toast-header.rtv-header-large { font-size: 22px; margin-bottom: 10px; }
+.rtv-toast-header.rtv-header-xlarge { font-size: 28px; margin-bottom: 12px; }
+
+/* Body text size variants */
+.rtv-toast-text.rtv-text-compact { font-size: 12px; }
+.rtv-toast-text.rtv-text-large { font-size: 17px; }
+.rtv-toast-text.rtv-text-xlarge { font-size: 20px; }
+
+/* Header text color palette */
+.rtv-toast-header.rtv-color-white { color: #f4f7f8ff; }
+.rtv-toast-header.rtv-color-green { color: #a9f5a9ff; }
+.rtv-toast-header.rtv-color-cyan { color: #7fd8f2ff; }
+.rtv-toast-header.rtv-color-yellow { color: #f2e27fff; }
+.rtv-toast-header.rtv-color-orange { color: #f2b06aff; }
+.rtv-toast-header.rtv-color-red { color: #f28a8aff; }
+.rtv-toast-header.rtv-color-magenta { color: #e39af0ff; }
+.rtv-toast-header.rtv-color-blue { color: #8fa8f5ff; }
+
+/* Body text color palette */
+.rtv-toast-text.rtv-color-white { color: #f4f7f8ff; }
+.rtv-toast-text.rtv-color-green { color: #a9f5a9ff; }
+.rtv-toast-text.rtv-color-cyan { color: #7fd8f2ff; }
+.rtv-toast-text.rtv-color-yellow { color: #f2e27fff; }
+.rtv-toast-text.rtv-color-orange { color: #f2b06aff; }
+.rtv-toast-text.rtv-color-red { color: #f28a8aff; }
+.rtv-toast-text.rtv-color-magenta { color: #e39af0ff; }
+.rtv-toast-text.rtv-color-blue { color: #8fa8f5ff; }
+
+/* Screen-position variants */
+.rtv-toast.rtv-pos-center-top
+{
+	horizontal-align: center;
+	vertical-align: top;
+	margin-top: 4px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	margin-left: 0px;
+}
+
+.rtv-toast.rtv-pos-center-middle
+{
+	horizontal-align: center;
+	vertical-align: center;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	margin-left: 0px;
+}
+
+.rtv-toast.rtv-pos-center-bottom
+{
+	horizontal-align: center;
+	vertical-align: bottom;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 4px;
+	margin-left: 0px;
+}
+
+.rtv-toast.rtv-pos-top-left
+{
+	horizontal-align: left;
+	vertical-align: top;
+	margin-top: 4px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	margin-left: 4px;
+}
+
+.rtv-toast.rtv-pos-top-right
+{
+	horizontal-align: right;
+	vertical-align: top;
+	margin-top: 4px;
+	margin-right: 4px;
+	margin-bottom: 0px;
+	margin-left: 0px;
+}
+
+.rtv-toast.rtv-pos-bottom-left
+{
+	horizontal-align: left;
+	vertical-align: bottom;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 4px;
+	margin-left: 4px;
+}
+
+.rtv-toast.rtv-pos-bottom-right
+{
+	horizontal-align: right;
+	vertical-align: bottom;
+	margin-top: 0px;
+	margin-right: 4px;
+	margin-bottom: 4px;
+	margin-left: 0px;
+}
+
+.rtv-toast.rtv-pos-center-left
+{
+	horizontal-align: left;
+	vertical-align: center;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	margin-left: 4px;
+}
+
+.rtv-toast.rtv-pos-center-right
+{
+	horizontal-align: right;
+	vertical-align: center;
+	margin-top: 0px;
+	margin-right: 4px;
+	margin-bottom: 0px;
+	margin-left: 0px;
+}
+
+/* Draining time-left bar (shown only when Rtv.AlwaysActive = false) */
+.rtv-toast-bar-track
+{
+	visibility: collapse;
+	width: 100%;
+	height: 6px;
+	margin-top: 10px;
+	background-color: #20313d99;
+	border: 1px solid #78a7ba44;
+}
+
+.rtv-toast-bar-track.rtv-bar-on
+{
+	visibility: visible;
+}
+
+.rtv-toast-bar
+{
+	width: 100%;
+	height: 100%;
+	background-color: #5db2d1ff;
+	transition-property: width;
+	transition-timing-function: linear;
+	transition-duration: 0.0s;
+}
+
+.rtv-toast-bar.rtv-run { width: 0%; }
+
+/* Duration steps */
+.rtv-toast-bar.rtv-dur-10 { transition-duration: 10.0s; }
+.rtv-toast-bar.rtv-dur-15 { transition-duration: 15.0s; }
+.rtv-toast-bar.rtv-dur-20 { transition-duration: 20.0s; }
+.rtv-toast-bar.rtv-dur-30 { transition-duration: 30.0s; }
+.rtv-toast-bar.rtv-dur-45 { transition-duration: 45.0s; }
+.rtv-toast-bar.rtv-dur-60 { transition-duration: 60.0s; }
+.rtv-toast-bar.rtv-dur-90 { transition-duration: 90.0s; }
+.rtv-toast-bar.rtv-dur-120 { transition-duration: 120.0s; }
+.rtv-toast-bar.rtv-dur-180 { transition-duration: 180.0s; }
+.rtv-toast-bar.rtv-dur-240 { transition-duration: 240.0s; }
+.rtv-toast-bar.rtv-dur-300 { transition-duration: 300.0s; }
 
 /* Invisible layout-revision marker (see the comment in the xml) */
 .rtv-version

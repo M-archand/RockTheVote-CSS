@@ -21,14 +21,14 @@ namespace cs2_rockthevote.Core
         private const string RowWinnerClass = "rtv-row-winner";
         private const string DialogHiddenClass = "rtv-dialog-hidden";
 
-        private static readonly string[] TextColors = ["white", "green", "cyan", "yellow", "orange", "red", "magenta", "blue"];
+        internal static readonly string[] TextColors = ["white", "green", "cyan", "yellow", "orange", "red", "magenta", "blue"];
 
         // Row width steps baked into the addon stylesheet (.rtv-vote-row.rtv-w-*); the server
         // picks one per vote from the longest option label.
         private static readonly int[] WidthSteps = [240, 280, 320, 360, 400, 440, 480, 520, 560, 600, 640];
 
         // Position variants baked into the addon stylesheet (#rtv_vote_dialog.rtv-pos-*). Default (no class) = CenterRight.
-        private static readonly Dictionary<string, string> PositionClasses = new(StringComparer.OrdinalIgnoreCase)
+        internal static readonly Dictionary<string, string> PositionClasses = new(StringComparer.OrdinalIgnoreCase)
         {
             ["CenterTop"] = "rtv-pos-center-top",
             ["CenterMiddle"] = "rtv-pos-center-middle",
@@ -101,10 +101,10 @@ namespace cs2_rockthevote.Core
                 return false;
             }
 
-            string layout = _panoramaConfig.LayoutResource?.Trim() ?? "";
+            string layout = _panoramaConfig.AddonName?.Trim() ?? "";
             if (layout.Length == 0)
             {
-                _logger.LogWarning("[RTV.CustomHud] PanoramaMenu.LayoutResource is empty; no panel will be shown.");
+                _logger.LogWarning("[RTV.CustomHud] PanoramaMenu.AddonName is empty; no panel will be shown.");
                 return false;
             }
 
@@ -332,8 +332,8 @@ namespace cs2_rockthevote.Core
 
             hud.SetDialogVariable(HeaderPanel, HeaderPanel, title, playerSlot);
             hud.SetDialogVariable(TimerPanel, TimerPanel, _timerText, playerSlot);
-            ApplyHeaderSize(hud, playerSlot);
-            ApplyMenuPosition(hud, playerSlot);
+            ApplyMapVoteHeaderSize(hud, playerSlot);
+            ApplyMapVoteMenuPosition(hud, playerSlot);
 
             // Without click support the Close button is dead UI. With it, it lets the
             // player dismiss the panel (and free their cursor) without voting.
@@ -368,7 +368,7 @@ namespace cs2_rockthevote.Core
             for (int i = 0; i < _options.Count; i++)
                 maxLength = Math.Max(maxLength, $"{i + 1}. {_options[i]}".Length);
 
-            int fontSize = _panoramaConfig.RowSize?.Trim().ToLowerInvariant() switch
+            int fontSize = _panoramaConfig.MapVoteRowSize?.Trim().ToLowerInvariant() switch
             {
                 "compact" => 15,
                 "large" => 22,
@@ -390,7 +390,7 @@ namespace cs2_rockthevote.Core
 
         private void ApplyRowStyle(CustomHudLayout hud, int row, int playerSlot)
         {
-            string size = _panoramaConfig.RowSize?.Trim().ToLowerInvariant() ?? "normal";
+            string size = _panoramaConfig.MapVoteRowSize?.Trim().ToLowerInvariant() ?? "normal";
             bool compact = size == "compact";
             bool large = size == "large";
             bool extraLarge = size == "extralarge";
@@ -405,16 +405,16 @@ namespace cs2_rockthevote.Core
             if (_rowWidthClass.Length > 0)
                 hud.SetHasClass($"{RowPanelPrefix}{row}", _rowWidthClass, true, playerSlot);
 
-            string color = _panoramaConfig.RowColor?.Trim().ToLowerInvariant() ?? "green";
+            string color = _panoramaConfig.MapVoteRowColor?.Trim().ToLowerInvariant() ?? "green";
             if (TextColors.Contains(color))
                 hud.SetHasClass($"{RowLabelPrefix}{row}", $"rtv-color-{color}", true, playerSlot);
         }
 
         private bool _warnedBadPosition;
 
-        private void ApplyMenuPosition(CustomHudLayout hud, int playerSlot)
+        private void ApplyMapVoteMenuPosition(CustomHudLayout hud, int playerSlot)
         {
-            string position = _panoramaConfig.MenuPosition?.Trim() ?? "";
+            string position = _panoramaConfig.MapVoteMenuPosition?.Trim() ?? "";
             if (position.Length == 0)
                 return;
 
@@ -425,20 +425,20 @@ namespace cs2_rockthevote.Core
             else if (!_warnedBadPosition)
             {
                 _warnedBadPosition = true;
-                _logger.LogWarning("[RTV.CustomHud] Unknown PanoramaMenu.MenuPosition '{Position}'; using the layout default. Valid: {Valid}",
+                _logger.LogWarning("[RTV.CustomHud] Unknown PanoramaMenu.MapVoteMenuPosition '{Position}'; using the layout default. Valid: {Valid}",
                     position, string.Join(", ", PositionClasses.Keys));
             }
         }
 
-        private void ApplyHeaderSize(CustomHudLayout hud, int playerSlot)
+        private void ApplyMapVoteHeaderSize(CustomHudLayout hud, int playerSlot)
         {
-            string size = _panoramaConfig.HeaderSize?.Trim().ToLowerInvariant() ?? "normal";
+            string size = _panoramaConfig.MapVoteHeaderSize?.Trim().ToLowerInvariant() ?? "normal";
             hud.SetHasClass(HeaderPanel, "rtv-header-compact", size == "compact", playerSlot);
             hud.SetHasClass(HeaderPanel, "rtv-header-large", size == "large", playerSlot);
             hud.SetHasClass(HeaderPanel, "rtv-header-xlarge", size == "extralarge", playerSlot);
 
             // "default" (or anything not in the palette) keeps the layout's gold header
-            string color = _panoramaConfig.HeaderColor?.Trim().ToLowerInvariant() ?? "default";
+            string color = _panoramaConfig.MapVoteHeaderColor?.Trim().ToLowerInvariant() ?? "default";
             if (TextColors.Contains(color))
                 hud.SetHasClass(HeaderPanel, $"rtv-color-{color}", true, playerSlot);
         }

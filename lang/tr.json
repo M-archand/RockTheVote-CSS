@@ -63,7 +63,9 @@
   "rtv.cooldown": "{lightred}Komut beklemede. ({white}{0}{red} saniye kaldı)",
   "rtv.time-up": "{lightred}Zaman sınırı içinde yeterli sayıda oyuncu oy kullanmadı.",
   "rtv.ui-question": "farklı bir map",
-  "rtv.instructions": "{lime}!rtv {default}komutuyla oy ver!",
+  "rtv.instructions": "{0} komutuyla oy ver!",
+  "rtv.panorama-header": "RTV aktif",
+  "rtv.panorama-descripition": "Kalan oy: {0}",
 
   "emv.you-voted": "{0} için oy verdiniz",
   "emv.vote-started": "Bir sonraki harita için oylama başladı, seçiminizi yapın!",
