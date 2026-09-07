@@ -97,7 +97,7 @@ namespace cs2_rockthevote
                     Server.ExecuteCommand("sv_vote_allow_spectators 1");
                     Server.ExecuteCommand("sv_vote_count_spectator_votes 1");
                     _pluginState.ExtendTimeVoteHappening = true;
-                    if (_voteExtendConfig.EnableCountdown && _voteExtendConfig.CountdownType == "chat")
+                    if (_voteExtendConfig.EnableCountdown && ConfigValue.Is(_voteExtendConfig.CountdownType, "chat"))
                     {
                         _extendRoundTimeManager.ChatCountdown(_voteExtendConfig.VoteDuration);
                     }

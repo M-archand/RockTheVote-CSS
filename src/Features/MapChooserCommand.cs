@@ -69,9 +69,7 @@ namespace cs2_rockthevote
             if (maps is null || maps.Length == 0)
                 return;
 
-            var menuType = MenuManager.MenuTypesList.TryGetValue(_config.MenuType ?? "", out var resolvedType)
-                ? resolvedType
-                : MenuTypeManager.GetDefaultMenu();
+            var menuType = ConfigValue.Resolve(MenuManager.MenuTypesList, _config.MenuType, MenuTypeManager.GetDefaultMenu());
 
             var menu = MenuManager.MenuByType(menuType, _localizer.Localize("general.choose.map"), _plugin!);
 

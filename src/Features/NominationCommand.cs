@@ -104,10 +104,7 @@ namespace cs2_rockthevote
             if (string.IsNullOrEmpty(mapName))
             {
                 var title = _localizer.Localize("nominate.title");
-                var key = _nomConfig.MenuType?.Trim() ?? "";
-                var menuType = MenuManager.MenuTypesList.TryGetValue(key, out var resolvedType)
-                    ? resolvedType
-                    : MenuTypeManager.GetDefaultMenu();
+                var menuType = ConfigValue.Resolve(MenuManager.MenuTypesList, _nomConfig.MenuType, MenuTypeManager.GetDefaultMenu());
 
                 var menu = MenuManager.MenuByType(menuType, title, _plugin!);
 

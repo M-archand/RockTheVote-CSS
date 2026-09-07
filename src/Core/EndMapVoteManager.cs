@@ -288,7 +288,7 @@ namespace cs2_rockthevote
 
         private bool IsPanoramaMode()
         {
-            return string.Equals(_endMapConfig.MenuType?.Trim(), "panorama", StringComparison.OrdinalIgnoreCase);
+            return ConfigValue.Is(_endMapConfig.MenuType, "panorama");
         }
 
         // Chat-number voting applies only when a panorama vote runs without click
@@ -301,7 +301,7 @@ namespace cs2_rockthevote
 
         private bool ShouldPrintChatMapChoices()
         {
-            bool chatDriven = string.Equals(_endMapConfig.MenuType?.Trim(), "ChatMenu", StringComparison.OrdinalIgnoreCase)
+            bool chatDriven = ConfigValue.Is(_endMapConfig.MenuType, "ChatMenu")
                 || PanoramaChatFallbackActive();
             return chatDriven
                 && _endMapConfig.ChatMapChoiceReminder
@@ -536,10 +536,7 @@ namespace cs2_rockthevote
                 return;
 
             var title = _localizer.Localize("emv.hud.menu-title");
-            var key = _endMapConfig.MenuType?.Trim() ?? "";
-            var menuType = MenuManager.MenuTypesList.TryGetValue(key, out var resolvedType)
-                ? resolvedType
-                : MenuTypeManager.GetDefaultMenu();
+            var menuType = ConfigValue.Resolve(MenuManager.MenuTypesList, _endMapConfig.MenuType, MenuTypeManager.GetDefaultMenu());
 
             var menu = MenuManager.MenuByType(menuType, title, _plugin);
             if (menu is ChatMenu)
@@ -683,7 +680,7 @@ namespace cs2_rockthevote
 
         public void ChatCountdown(int secondsLeft)
         {
-            if (!_pluginState.EofVoteHappening || !_endMapConfig.EnableCountdown || _endMapConfig.CountdownType != "chat")
+            if (!_pluginState.EofVoteHappening || !_endMapConfig.EnableCountdown || !ConfigValue.Is(_endMapConfig.CountdownType, "chat"))
                 return;
 
             string text = _localizer.LocalizeWithPrefix("general.chat-countdown", secondsLeft);
@@ -901,7 +898,7 @@ namespace cs2_rockthevote
                 : (_rtvConfig.MapsToShow == 0 ? MaxOptionsHud : _rtvConfig.MapsToShow);
 
             // Cap for CenterHtmlMenu (HUD) pages
-            if (string.Equals(_endMapConfig.MenuType?.Trim(), "CenterHtmlMenu", StringComparison.Ordinal)
+            if (ConfigValue.Is(_endMapConfig.MenuType, "CenterHtmlMenu")
                 && mapsToShow > MaxOptionsHud)
             {
                 mapsToShow = MaxOptionsHud;
@@ -985,7 +982,7 @@ namespace cs2_rockthevote
                 }
             }
 
-            if (_endMapConfig.MenuType != "ChatMenu")
+            if (!ConfigValue.Is(_endMapConfig.MenuType, "ChatMenu"))
                 Server.PrintToChatAll(_localizer.LocalizeWithPrefix("emv.vote-started"));
 
             // Chat instructions only when the panorama vote fell back to chat-number input
@@ -997,7 +994,7 @@ namespace cs2_rockthevote
                 var hintType = string.IsNullOrWhiteSpace(_endMapConfig.HintType)
                     ? "GameHint"
                     : _endMapConfig.HintType.Trim();
-                if (string.Equals(hintType, "csay", StringComparison.OrdinalIgnoreCase))
+                if (ConfigValue.Is(hintType, "csay"))
                 {
                     var message = _localizer.Localize("emv.vote-started").Replace("\"", "'");
                     Server.ExecuteCommand($"css_csay {message}");

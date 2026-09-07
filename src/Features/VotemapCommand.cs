@@ -120,10 +120,7 @@ namespace cs2_rockthevote
                 var title = _localizer.Localize("general.choose.map");
 
                 // Resolve the menu type from config, fallback to default if necessary
-                var key = _config.MenuType?.Trim() ?? "";
-                var menuType = MenuManager.MenuTypesList.TryGetValue(key, out var resolvedType)
-                    ? resolvedType
-                    : MenuTypeManager.GetDefaultMenu();
+                var menuType = ConfigValue.Resolve(MenuManager.MenuTypesList, _config.MenuType, MenuTypeManager.GetDefaultMenu());
 
                 var menu = MenuManager.MenuByType(menuType, title, _plugin!);
 

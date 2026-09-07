@@ -50,11 +50,11 @@ namespace cs2_rockthevote.CrossCutting
         }
 
         private bool ShouldHook() =>
-            _endMapConfig.CountdownType == "hud"
-            || _rtvConfig.CountdownType == "hud"
-            || _voteExtendConfig.CountdownType == "hud"
-            || _endMapConfig.MenuType == "HudMenu"
-            || _nomConfig.MenuType == "HudMenu";
+            ConfigValue.Is(_endMapConfig.CountdownType, "hud")
+            || ConfigValue.Is(_rtvConfig.CountdownType, "hud")
+            || ConfigValue.Is(_voteExtendConfig.CountdownType, "hud")
+            || ConfigValue.Is(_endMapConfig.MenuType, "HudMenu")
+            || ConfigValue.Is(_nomConfig.MenuType, "HudMenu");
 
         private void ApplyHookState(Plugin plugin)
         {
@@ -153,25 +153,25 @@ namespace cs2_rockthevote.CrossCutting
                 return;
 
             // EndMapVote HUD Countdown. Don't show if EnabledHudMenu true, otherwise this would be covered by the map list
-            if (_endMapConfig.EnableCountdown && _endMapConfig.CountdownType == "hud" && _pluginState.EofVoteHappening && _endMapConfig.MenuType != "HudMenu")
+            if (_endMapConfig.EnableCountdown && ConfigValue.Is(_endMapConfig.CountdownType, "hud") && _pluginState.EofVoteHappening && !ConfigValue.Is(_endMapConfig.MenuType, "HudMenu"))
             {
                 PrintCenterToAll(_localizer.Localize("emv.hud.timer", _endMap.TimeLeft));
             }
 
             // RTV HUD Countdown
-            if (_rtvConfig.EnableCountdown && _rtvConfig.CountdownType == "hud" && _pluginState.RtvVoteHappening)
+            if (_rtvConfig.EnableCountdown && ConfigValue.Is(_rtvConfig.CountdownType, "hud") && _pluginState.RtvVoteHappening)
             {
                 PrintCenterToAll(_localizer.Localize("general.hud-countdown", _rtv.TimeLeft));
             }
 
             // VoteExtend HUD Countdown
-            if (_voteExtendConfig.EnableCountdown && _voteExtendConfig.CountdownType == "hud" && _pluginState.ExtendTimeVoteHappening)
+            if (_voteExtendConfig.EnableCountdown && ConfigValue.Is(_voteExtendConfig.CountdownType, "hud") && _pluginState.ExtendTimeVoteHappening)
             {
                 PrintCenterToAll(_localizer.Localize("general.hud-countdown", _voteExtend.TimeLeft));
             }
 
             // HUD map vote list
-            if (_endMapConfig.MenuType == "HudMenu" && _pluginState.EofVoteHappening)
+            if (ConfigValue.Is(_endMapConfig.MenuType, "HudMenu") && _pluginState.EofVoteHappening)
             {
                 _hudBuilder.Clear();
                 _hudBuilder.Append($"<b><font color='yellow'>{_localizer.Localize("emv.hud.timer", _endMap.TimeLeft)}</font></b>");

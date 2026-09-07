@@ -150,7 +150,7 @@ namespace cs2_rockthevote
             _pluginState.RtvVoteHappening = true;
             _rtvEndTime = DateTime.UtcNow.AddSeconds(_config.RtvVoteDuration);
 
-            if (_config.EnableCountdown && _config.CountdownType == "chat")
+            if (_config.EnableCountdown && ConfigValue.Is(_config.CountdownType, "chat"))
             {
                 _plugin!.AddTimer(0.1f, () => ChatCountdown(_config.RtvVoteDuration),
                     TimerFlags.STOP_ON_MAPCHANGE);

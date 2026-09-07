@@ -94,7 +94,7 @@ namespace cs2_rockthevote
 
         public void ChatCountdown(int secondsLeft)
         {
-            if (!_pluginState.ExtendTimeVoteHappening || !_voteExtendConfig.EnableCountdown || _voteExtendConfig.CountdownType != "chat")
+            if (!_pluginState.ExtendTimeVoteHappening || !_voteExtendConfig.EnableCountdown || !ConfigValue.Is(_voteExtendConfig.CountdownType, "chat"))
                 return;
 
             string text = _localizer.LocalizeWithPrefix("general.chat-countdown", secondsLeft);
@@ -175,7 +175,7 @@ namespace cs2_rockthevote
             _pluginState.ExtendTimeVoteHappening = true;
             _voteExtendConfig = config;
             
-            if (_voteExtendConfig.EnableCountdown && _voteExtendConfig.CountdownType == "chat")
+            if (_voteExtendConfig.EnableCountdown && ConfigValue.Is(_voteExtendConfig.CountdownType, "chat"))
             {
                 ChatCountdown(_voteExtendConfig.VoteDuration);
             }
