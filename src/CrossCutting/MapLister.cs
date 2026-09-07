@@ -1,4 +1,4 @@
-﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging;
 
@@ -11,7 +11,7 @@ namespace cs2_rockthevote
         public bool MapsLoaded { get; private set; } = false;
         public event EventHandler<Map[]>? EventMapsLoaded;
         private Plugin? _plugin;
-        private ILogger _debugLogger = NullLogger<MapLister>.Instance;
+        private ILogger _debugLogger = NullLogger.Instance;
 
         public MapLister(ILogger<MapLister> logger)
         {
@@ -30,7 +30,7 @@ namespace cs2_rockthevote
 
             if (_plugin is null)
             {
-                _debugLogger.LogWarning("[RTV.MapLister] LoadMaps called before plugin was assigned.");
+                _logger.LogWarning("[RTV.MapLister] LoadMaps called before plugin was assigned.");
                 return;
             }
 
@@ -39,7 +39,7 @@ namespace cs2_rockthevote
 
             if (!File.Exists(mapsFile))
             {
-                _debugLogger.LogError("[RTV.MapLister] Missing required map list file at {MapListPath}.", mapsFile);
+                _logger.LogError("[RTV.MapLister] Missing required map list file at {MapListPath}.", mapsFile);
                 if (File.Exists(exampleFile))
                 {
                     _debugLogger.LogInformation(
@@ -49,7 +49,7 @@ namespace cs2_rockthevote
                     );
                 }
 
-                Server.PrintToConsole($"[RTV] maplist.txt not found at {mapsFile}");
+                Server.PrintToConsole($"[RTV.MapLister] Missing required map list file at {mapsFile}.");
                 EventMapsLoaded?.Invoke(this, Maps);
                 return;
             }
@@ -75,8 +75,8 @@ namespace cs2_rockthevote
             catch (Exception ex)
             {
                 Clear();
-                _debugLogger.LogError(ex, "[RTV.MapLister] Failed to load map list from {MapListPath}.", mapsFile);
-                Server.PrintToConsole($"[RTV] Failed to load maplist.txt: {ex.Message}");
+                _logger.LogError(ex, "[RTV.MapLister] Failed to load map list from {MapListPath}. message={Message}", mapsFile, ex.Message);
+                Server.PrintToConsole($"[RTV.MapLister] Failed to load map list from {mapsFile}. message={ex.Message}");
             }
 
             EventMapsLoaded?.Invoke(this, Maps);
@@ -90,7 +90,7 @@ namespace cs2_rockthevote
 
         public void OnConfigParsed(Config config)
         {
-            _debugLogger = config.General.DebugLogging ? _logger : NullLogger<MapLister>.Instance;
+            _debugLogger = DebugLog.For(_logger, config);
         }
 
 

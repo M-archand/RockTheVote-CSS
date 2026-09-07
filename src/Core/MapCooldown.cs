@@ -1,4 +1,5 @@
 using CounterStrikeSharp.API;
+using Microsoft.Extensions.Logging;
 
 namespace cs2_rockthevote.Core
 {
@@ -11,8 +12,12 @@ namespace cs2_rockthevote.Core
         // Backup file (next to maplist.txt) so the cooldown survives a restart, null until OnLoad
         private string? _cooldownFilePath;
 
-        public MapCooldown(MapLister mapLister)
+        private readonly ILogger<MapCooldown> _logger;
+
+        public MapCooldown(MapLister mapLister, ILogger<MapCooldown> logger)
         {
+            _logger = logger;
+
             // Each time the maps load (i.e. on map start), refresh our list
             mapLister.EventMapsLoaded += (sender, maps) =>
             {
@@ -88,7 +93,8 @@ namespace cs2_rockthevote.Core
             }
             catch (Exception ex)
             {
-                Server.PrintToConsole($"[RTV] Failed to load map cooldown file: {ex.Message}");
+                _logger.LogError(ex, "[RTV.Cooldown] Failed to load map cooldown file from {CooldownPath}. message={Message}", _cooldownFilePath, ex.Message);
+                Server.PrintToConsole($"[RTV.Cooldown] Failed to load map cooldown file from {_cooldownFilePath}. message={ex.Message}");
             }
         }
 
@@ -104,7 +110,8 @@ namespace cs2_rockthevote.Core
             }
             catch (Exception ex)
             {
-                Server.PrintToConsole($"[RTV] Failed to save map cooldown file: {ex.Message}");
+                _logger.LogError(ex, "[RTV.Cooldown] Failed to save map cooldown file to {CooldownPath}. message={Message}", _cooldownFilePath, ex.Message);
+                Server.PrintToConsole($"[RTV.Cooldown] Failed to save map cooldown file to {_cooldownFilePath}. message={ex.Message}");
             }
         }
 

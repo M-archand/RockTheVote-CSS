@@ -1,7 +1,6 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging;
 
 namespace cs2_rockthevote
@@ -19,7 +18,6 @@ namespace cs2_rockthevote
     {
         private readonly MapLister _mapLister;
         private readonly ILogger<ReloadMapsCommand> _logger;
-        private ILogger _debugLogger = NullLogger<ReloadMapsCommand>.Instance;
         private GeneralConfig _generalConfig = new();
 
         public ReloadMapsCommand(MapLister mapLister, ILogger<ReloadMapsCommand> logger)
@@ -31,7 +29,6 @@ namespace cs2_rockthevote
         public void OnConfigParsed(Config config)
         {
             _generalConfig = config.General;
-            _debugLogger = _generalConfig.DebugLogging ? _logger : NullLogger<ReloadMapsCommand>.Instance;
         }
 
         public void CommandHandler(CCSPlayerController? player, CommandInfo command)
@@ -55,12 +52,12 @@ namespace cs2_rockthevote
             }
             catch (FileNotFoundException ex)
             {
-                _debugLogger.LogError(ex, "maplist.txt not found while running css_reloadmaps.");
+                _logger.LogError(ex, "[RTV.ReloadMaps] maplist.txt not found while running css_reloadmaps.");
                 command.ReplyToCommand($"[RTV] {ChatColors.Red}maplist.txt not found.");
             }
             catch (Exception ex)
             {
-                _debugLogger.LogError(ex, "[RTV.ReloadMaps] Failed to reload map list via css_reloadmaps.");
+                _logger.LogError(ex, "[RTV.ReloadMaps] Failed to reload map list via css_reloadmaps.");
                 command.ReplyToCommand($"[RTV] {ChatColors.Red}Failed to reload map list. Check server logs for details.");
             }
         }

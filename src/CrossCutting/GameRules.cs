@@ -1,4 +1,4 @@
-﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Timers;
@@ -17,7 +17,7 @@ namespace cs2_rockthevote
         private ConVar? _timeLimitCvar;
         private float _fallbackRoundStartTime;
         private int _fallbackRoundTimeSeconds;
-        private ILogger _debugLogger = NullLogger<GameRules>.Instance;
+        private ILogger _debugLogger = NullLogger.Instance;
 
         public GameRules(ILogger<GameRules> logger)
         {
@@ -65,7 +65,7 @@ namespace cs2_rockthevote
             catch (InvalidOperationException ex)
             {
                 _gameRules = null;
-                _debugLogger.LogError(ex, "[RTV.GameRules] InvalidOperation while resolving gamerules. refresh={Refresh} message={Message}", refresh, ex.Message);
+                _logger.LogError(ex, "[RTV.GameRules] InvalidOperation while resolving gamerules. refresh={Refresh} message={Message}", refresh, ex.Message);
                 return null;
             }
         }
@@ -93,7 +93,7 @@ namespace cs2_rockthevote
 
         public void OnConfigParsed(Config config)
         {
-            _debugLogger = config.General.DebugLogging ? _logger : NullLogger<GameRules>.Instance;
+            _debugLogger = DebugLog.For(_logger, config);
         }
 
         public float GameStartTime => GetValidGameRules()?.GameStartTime ?? 0;
@@ -124,7 +124,7 @@ namespace cs2_rockthevote
                 return true;
             }
 
-            _debugLogger.LogWarning(
+            _logger.LogWarning(
                 "[RTV.GameRules] TryGetRoundTiming failed. gamerules unavailable and fallback timing invalid. roundTime={RoundTime} roundStartTime={RoundStartTime}",
                 roundTime,
                 roundStartTime
@@ -230,7 +230,7 @@ namespace cs2_rockthevote
                 }
                 else
                 {
-                    _debugLogger.LogWarning("[RTV.GameRules] SyncRoundTimeToTimeLimit wrote RoundTime but could not locate CCSGameRulesProxy to broadcast the change.");
+                    _logger.LogWarning("[RTV.GameRules] SyncRoundTimeToTimeLimit wrote RoundTime but could not locate CCSGameRulesProxy to broadcast the change.");
                 }
 
                 _debugLogger.LogInformation(
@@ -240,7 +240,7 @@ namespace cs2_rockthevote
             }
             catch (Exception ex)
             {
-                _debugLogger.LogError(ex, "[RTV.GameRules] SyncRoundTimeToTimeLimit failed: {Message}", ex.Message);
+                _logger.LogError(ex, "[RTV.GameRules] SyncRoundTimeToTimeLimit failed: {Message}", ex.Message);
                 return false;
             }
         }

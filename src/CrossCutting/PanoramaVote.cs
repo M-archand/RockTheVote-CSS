@@ -74,7 +74,7 @@ namespace cs2_rockthevote
         private ILogger _debugLogger = NullLogger.Instance;
 
         public void OnConfigParsed(Config config) =>
-            _debugLogger = config.General.DebugLogging ? _logger : NullLogger.Instance;
+            _debugLogger = DebugLog.For(_logger, config);
 
         /// Resets the vote state, clearing any ongoing vote information.
         public void Reset(CVoteController? voteController = null)

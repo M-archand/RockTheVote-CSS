@@ -59,7 +59,7 @@ namespace cs2_rockthevote
             }
             catch (Exception ex)
             {
-                _logger.LogError($"[RTV.MapList] An error occurred while reading the map list: {ex.Message}");
+                _logger.LogError(ex, "[RTV.MaplistCommand] An error occurred while reading the map list: {Message}", ex.Message);
             }
         }
     }

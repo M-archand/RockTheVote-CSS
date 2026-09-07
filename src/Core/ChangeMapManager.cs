@@ -1,4 +1,4 @@
-﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Timers;
@@ -27,7 +27,7 @@ namespace cs2_rockthevote
     public class ChangeMapManager : IPluginDependency<Plugin, Config>
     {
         private readonly ILogger<ChangeMapManager> _logger;
-        private ILogger _debugLogger = NullLogger<ChangeMapManager>.Instance;
+        private ILogger _debugLogger = NullLogger.Instance;
         private Plugin? _plugin;
         private StringLocalizer _localizer;
         private PluginState _pluginState;
@@ -137,7 +137,7 @@ namespace cs2_rockthevote
             Map? map = _maps.FirstOrDefault(x => string.Equals(x.Name, NextMap, StringComparison.OrdinalIgnoreCase));
             if (map == null)
             {
-                _debugLogger.LogWarning("[RTV.MapChange] Could not resolve map object. map={Map}", NextMap);
+                _logger.LogWarning("[RTV.MapChange] Could not resolve map object. map={Map}", NextMap);
                 return false;
             }
 
@@ -181,7 +181,7 @@ namespace cs2_rockthevote
                 catch (Exception ex)
                 {
                     _pendingMapChangeTimer = null;
-                    _debugLogger.LogError(
+                    _logger.LogError(
                         ex,
                         "[RTV.MapChange] Delayed change timer callback failed. map={Map} trigger={Trigger} currentMap={CurrentMap} message={Message}",
                         map.Name,
@@ -260,7 +260,7 @@ namespace cs2_rockthevote
             }
             catch (Exception ex)
             {
-                _debugLogger.LogError(
+                _logger.LogError(
                     ex,
                     "[RTV.MapChange] ExecuteMapChangeCommand failed. map={Map} mapId={MapId} previousMap={PreviousMap} message={Message}",
                     map.Name,
@@ -284,7 +284,7 @@ namespace cs2_rockthevote
 
                     if (string.Equals(current, mapBefore, StringComparison.OrdinalIgnoreCase))
                     {
-                        _debugLogger.LogWarning(
+                        _logger.LogWarning(
                             "[RTV.MapChange] Verify timer found unchanged map. requestedMap={RequestedMap} currentMap={CurrentMap}",
                             map.Name,
                             current
@@ -305,19 +305,19 @@ namespace cs2_rockthevote
 
                         if (candidates.Count == 0)
                         {
-                            _debugLogger.LogWarning(
+                            _logger.LogWarning(
                                 "[RTV.MapChange] Fallback selection failed. currentMap={CurrentMap} requestedMap={RequestedMap}",
                                 current,
                                 map.Name
                             );
-                            Server.PrintToConsole("[RTV] Fallback map selection failed: no candidates available.");
+                            Server.PrintToConsole($"[RTV.MapChange] Fallback selection failed. currentMap={current} requestedMap={map.Name}");
                             return;
                         }
 
                         var random = new Random();
                         var fallback = candidates[random.Next(candidates.Count)];
 
-                        _debugLogger.LogWarning(
+                        _logger.LogWarning(
                             "[RTV.MapChange] Attempting fallback map. fallbackMap={FallbackMap} previousRequestedMap={RequestedMap} currentMap={CurrentMap}",
                             fallback.Name,
                             map.Name,
@@ -349,8 +349,8 @@ namespace cs2_rockthevote
                 }
                 catch (Exception ex)
                 {
-                    _debugLogger.LogError(ex, "[RTV.MapChange] Fallback verify timer failed: {Message}", ex.Message);
-                    Server.PrintToConsole($"[RTV] Fallback map change check error: {ex.Message}");
+                    _logger.LogError(ex, "[RTV.MapChange] Fallback verify timer failed: {Message}", ex.Message);
+                    Server.PrintToConsole($"[RTV.MapChange] Fallback verify timer failed: {ex.Message}");
                 }
             }, TimerFlags.STOP_ON_MAPCHANGE); // auto-kill if map did change
         }
@@ -358,7 +358,7 @@ namespace cs2_rockthevote
         public void OnConfigParsed(Config config)
         {
             _config = config;
-            _debugLogger = config.General.DebugLogging ? _logger : NullLogger<ChangeMapManager>.Instance;
+            _debugLogger = DebugLog.For(_logger, config);
         }
 
         public void OnLoad(Plugin plugin)

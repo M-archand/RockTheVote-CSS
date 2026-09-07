@@ -184,7 +184,7 @@ namespace cs2_rockthevote
                                     }
                                     catch (Exception ex)
                                     {
-                                        _logger.LogError($"Error during vote cancellation: {ex.Message}");
+                                        _logger.LogError(ex, "[RTV.VoteExtendTime] Error during vote cancellation: {Message}", ex.Message);
                                     }
                                 });
                                 return;
@@ -201,7 +201,7 @@ namespace cs2_rockthevote
                                     }
                                     catch (Exception ex)
                                     {
-                                        _logger.LogError($"Error during early vote pass: {ex.Message}");
+                                        _logger.LogError(ex, "[RTV.VoteExtendTime] Error during early vote pass: {Message}", ex.Message);
                                     }
                                 });
                                 return;
@@ -210,7 +210,7 @@ namespace cs2_rockthevote
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Error processing vote: {Message}", ex.Message);
+                        _logger.LogError(ex, "[RTV.VoteExtendTime] Error processing vote: {Message}", ex.Message);
                     }
                     break;
 

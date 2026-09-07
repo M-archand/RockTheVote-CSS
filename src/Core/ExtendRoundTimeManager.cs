@@ -114,7 +114,7 @@ namespace cs2_rockthevote
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError($"[RTV.ExtendTime] Extend-time ChatCountdown timer callback failed: {ex.Message}");
+                        _logger.LogError(ex, "[RTV.ExtendTime] Extend-time ChatCountdown timer callback failed: {Message}", ex.Message);
                     }
                 }, TimerFlags.STOP_ON_MAPCHANGE
             );
@@ -250,7 +250,7 @@ namespace cs2_rockthevote
             }
             catch (Exception ex)
             {
-                _logger.LogWarning($"[RTV.ExtendTime] Something went wrong when updating the round time: {ex.Message}");
+                _logger.LogError(ex, "[RTV.ExtendTime] Something went wrong when updating the round time: {Message}", ex.Message);
                 return false;
             }
         }

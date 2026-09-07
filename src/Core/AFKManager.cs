@@ -3,6 +3,8 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Utils;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace cs2_rockthevote
 {
@@ -27,8 +29,13 @@ namespace cs2_rockthevote
         private readonly HashSet<int> _afkPlayers = new();
         private Timer? _timer;
         private DateTime _lastCheckUtc = DateTime.MinValue;
+        private readonly ILogger<AFKManager> _logger;
+        private ILogger _debugLogger = NullLogger.Instance;
 
-        public AFKManager() { }
+        public AFKManager(ILogger<AFKManager> logger)
+        {
+            _logger = logger;
+        }
 
         public void OnLoad(Plugin plugin)
         {
@@ -43,6 +50,7 @@ namespace cs2_rockthevote
         public void OnConfigParsed(Config config)
         {
             _generalConfig = config.General;
+            _debugLogger = DebugLog.For(_logger, config);
 
             if (_generalConfig.IncludeAFK)
             {
@@ -103,7 +111,10 @@ namespace cs2_rockthevote
                     _lastOrigin[slot] = new Vector(origin.X, origin.Y, origin.Z);
 
                     if (_generalConfig.DebugLogging)
+                    {
+                        _debugLogger.LogInformation("[RTV.AFKManager] Checked position for player: {PlayerName}. Position: {Position}", live.PlayerName, origin);
                         Server.PrintToConsole($"[RTV.AFKManager] Checked position for player: {live.PlayerName}. Position: {origin}");
+                    }
                 }
             }, TimerFlags.STOP_ON_MAPCHANGE);
         }

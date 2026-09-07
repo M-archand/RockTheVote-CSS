@@ -1,4 +1,4 @@
-﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Core.Attributes;
 using static CounterStrikeSharp.API.Core.Listeners;
@@ -94,13 +94,13 @@ namespace cs2_rockthevote
             catch (Exception ex)
             {
                 _hasMenuManager = false;
-                _logger.LogWarning(ex, "CS2MenuManager detection failed during OnAllPluginsLoaded.");
+                _logger.LogWarning(ex, "[RTV.Plugin] CS2MenuManager detection failed during OnAllPluginsLoaded.");
             }
 
             if (!_hasMenuManager)
             {
-                Server.PrintToConsole("CS2MenuManager API not found! It is required to use RockTheVote. Download it from here: https://github.com/schwarper/CS2MenuManager");
-                Logger.LogWarning("CS2MenuManager API not found! It is required to use RockTheVote. Download it from here: https://github.com/schwarper/CS2MenuManager");
+                Server.PrintToConsole("[RTV.Plugin] CS2MenuManager API not found! It is required to use RockTheVote. Download it from here: https://github.com/schwarper/CS2MenuManager");
+                Logger.LogWarning("[RTV.Plugin] CS2MenuManager API not found! It is required to use RockTheVote. Download it from here: https://github.com/schwarper/CS2MenuManager");
                 return;
             }
 
@@ -118,7 +118,7 @@ namespace cs2_rockthevote
             _dependencyManager.OnConfigParsed(config);
 
             if (config.Version != Config.CurrentVersion)
-                Logger.LogWarning("[RTV] Configuration version mismatch (Expected: {ExpectedVersion} | Current: {CurrentVersion})", Config.CurrentVersion, config.Version);
+                Logger.LogWarning("[RTV.Plugin] Configuration version mismatch (Expected: {ExpectedVersion} | Current: {CurrentVersion})", Config.CurrentVersion, config.Version);
         }
 
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]

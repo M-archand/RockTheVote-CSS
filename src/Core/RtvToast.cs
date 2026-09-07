@@ -2,6 +2,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
 using CounterStrikeSharp.API.Modules.Extensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System.Text.RegularExpressions;
 
 namespace cs2_rockthevote.Core
@@ -33,6 +34,7 @@ namespace cs2_rockthevote.Core
         private const float RefreshInterval = 5.0f;
 
         private readonly ILogger<RtvToast> _logger;
+        private ILogger _debugLogger = NullLogger.Instance;
         private readonly StringLocalizer _localizer;
         private RtvConfig _rtvConfig = new();
         private PanoramaMenuConfig _panoramaConfig = new();
@@ -60,6 +62,7 @@ namespace cs2_rockthevote.Core
             _rtvConfig = config.Rtv;
             _panoramaConfig = config.PanoramaMenu;
             _warnedBadPosition = false;
+            _debugLogger = DebugLog.For(_logger, config);
         }
 
         public void OnMapStart(string mapName)
@@ -114,12 +117,12 @@ namespace cs2_rockthevote.Core
                     _refreshTimer = _plugin?.AddTimer(RefreshInterval, RefreshFromProvider,
                         TimerFlags.STOP_ON_MAPCHANGE | TimerFlags.REPEAT);
 
-                _logger.LogInformation("[RTV.Toast] Spawned toast custom_hud_layout #{Index} (barDuration={Bar}s).",
+                _debugLogger.LogInformation("[RTV.Toast] Spawned toast custom_hud_layout #{Index} (barDuration={Bar}s).",
                     hud.Index, _barDuration);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[RTV.Toast] Failed to populate/spawn the toast panel.");
+                _logger.LogError(ex, "[RTV.Toast] Failed to populate/spawn the toast panel.");
                 Hide();
             }
         }
@@ -140,7 +143,7 @@ namespace cs2_rockthevote.Core
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[RTV.Toast] Failed to update the vote counter.");
+                _logger.LogError(ex, "[RTV.Toast] Failed to update the vote counter.");
             }
         }
 
@@ -188,7 +191,7 @@ namespace cs2_rockthevote.Core
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "[RTV.Toast] Failed to kill the toast panel entity.");
+                    _logger.LogError(ex, "[RTV.Toast] Failed to kill the toast panel entity.");
                 }
             }
         }
@@ -206,7 +209,7 @@ namespace cs2_rockthevote.Core
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[RTV.Toast] Required-votes refresh failed.");
+                _logger.LogError(ex, "[RTV.Toast] Required-votes refresh failed.");
             }
         }
 
@@ -221,7 +224,7 @@ namespace cs2_rockthevote.Core
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[RTV.Toast] Failed to start the drain bar.");
+                _logger.LogError(ex, "[RTV.Toast] Failed to start the drain bar.");
             }
         }
 

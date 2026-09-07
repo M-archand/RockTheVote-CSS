@@ -18,7 +18,7 @@ namespace cs2_rockthevote
     public class EndMapVoteManager : IPluginDependency<Plugin, Config>
     {
         private readonly ILogger<EndMapVoteManager> _logger;
-        private ILogger _debugLogger = NullLogger<EndMapVoteManager>.Instance;
+        private ILogger _debugLogger = NullLogger.Instance;
         private readonly MapLister _mapLister;
         private readonly ExtendRoundTimeManager _extendRoundTimeManager;
         private readonly TimeLimitManager _timeLimitManager;
@@ -120,9 +120,9 @@ namespace cs2_rockthevote
         {
             try
             {
-                //_logger.LogInformation(
-                //    "[RTV.EndMapVote] CustomHudClicked: button='{Button}' layout=0x{Layout:X} slot={Slot} voteActive={VoteActive} clickActive={ClickActive}",
-                //    buttonId, layoutPointer, playerSlot, _pluginState.EofVoteHappening, _customHud.ClickVotingActive);
+                _debugLogger.LogInformation(
+                    "[RTV.EndMapVote] CustomHudClicked: button='{Button}' layout=0x{Layout:X} slot={Slot} voteActive={VoteActive} clickActive={ClickActive}",
+                    buttonId, layoutPointer, playerSlot, _pluginState.EofVoteHappening, _customHud.ClickVotingActive);
 
                 if (!_activeVoteUsesPanorama || !_pluginState.EofVoteHappening || Timer is null)
                     return;
@@ -133,14 +133,14 @@ namespace cs2_rockthevote
                 // Only react to clicks on our own layout entity
                 if (!_customHud.MatchesLayout(layoutPointer))
                 {
-                    //_logger.LogInformation("[RTV.EndMapVote] CustomHudClicked layout mismatch (theirs 0x{Layout:X}), ignoring.", layoutPointer);
+                    _debugLogger.LogInformation("[RTV.EndMapVote] CustomHudClicked layout mismatch (theirs 0x{Layout:X}), ignoring.", layoutPointer);
                     return;
                 }
 
                 var player = Utilities.GetPlayerFromSlot(playerSlot);
                 if (player == null || !player.ReallyValid())
                 {
-                    //_logger.LogInformation("[RTV.EndMapVote] CustomHudClicked from slot {Slot} has no valid player, ignoring.", playerSlot);
+                    _debugLogger.LogInformation("[RTV.EndMapVote] CustomHudClicked from slot {Slot} has no valid player, ignoring.", playerSlot);
                     return;
                 }
 
@@ -159,11 +159,11 @@ namespace cs2_rockthevote
                     return;
                 }
 
-                //_logger.LogInformation("[RTV.EndMapVote] CustomHudClicked button '{Button}' matched no vote row.", buttonId);
+                _debugLogger.LogInformation("[RTV.EndMapVote] CustomHudClicked button '{Button}' matched no vote row.", buttonId);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[RTV.EndMapVote] Failed to handle CustomHudClicked.");
+                _logger.LogError(ex, "[RTV.EndMapVote] Failed to handle CustomHudClicked.");
             }
         }
 
@@ -173,11 +173,11 @@ namespace cs2_rockthevote
             _endMapConfig = config.EndOfMapVote;
             _panoramaConfig = config.PanoramaMenu;
             _rtvConfig = config.Rtv;
-            _debugLogger = _generalConfig.DebugLogging ? _logger : NullLogger<EndMapVoteManager>.Instance;
+            _debugLogger = DebugLog.For(_logger, config);
 
             if (!uint.TryParse(_endMapConfig.SoundPath, out _) && !SoundEventHelper.IsFullVolume(_endMapConfig.SoundVolume))
             {
-                _logger.LogWarning("EndOfMapVote: To modify the sound volume (any value aside from 1) you need to use the soundevent_hash rather than the sound path");
+                _logger.LogWarning("[RTV.EndMapVote] To modify the sound volume (any value aside from 1) you need to use the soundevent_hash rather than the sound path");
             }
 
             // Check to make sure VoteDuration isn't >= TriggerSecondsBeforeEnd, if it is, use a fallback
@@ -188,7 +188,7 @@ namespace cs2_rockthevote
                 _endMapConfig.VoteDuration = adjusted;
 
                 _logger.LogError(
-                    "EndOfMapVote config invalid: VoteDuration ({VoteDuration}s) must be less than " +
+                    "[RTV.EndMapVote] Config invalid: VoteDuration ({VoteDuration}s) must be less than " +
                     "TriggerSecondsBeforeEnd ({TriggerSecondsBeforeEnd}s). Automatically adjusting VoteDuration to {AdjustedVoteDuration}s.",
                     original,
                     _endMapConfig.TriggerSecondsBeforeEnd,
@@ -253,7 +253,7 @@ namespace cs2_rockthevote
             foreach (var t in _hintOuterTimers)
             {
                 try { t.Kill(); }
-                catch (Exception ex) { _debugLogger.LogError(ex, "[Hint] Failed to kill outer hint timer"); }
+                catch (Exception ex) { _logger.LogError(ex, "[RTV.Hint] Failed to kill outer hint timer"); }
             }
             _hintOuterTimers.Clear();
 
@@ -264,7 +264,7 @@ namespace cs2_rockthevote
                     if (entity.IsValid)
                         entity.AcceptInput("Kill");
                 }
-                catch (Exception ex) { _debugLogger.LogError(ex, "[Hint] Failed to kill hint entity"); }
+                catch (Exception ex) { _logger.LogError(ex, "[RTV.Hint] Failed to kill hint entity"); }
             }
             _hintEntities.Clear();
 
@@ -281,7 +281,7 @@ namespace cs2_rockthevote
                         if (live is not null && live.ReallyValid())
                             live.ReplicateConVar("sv_gameinstructor_enable", "false");
                     }
-                    catch (Exception ex) { _debugLogger.LogError(ex, "[Hint] Failed to restore instructor convar. slot={Slot}", slot); }
+                    catch (Exception ex) { _logger.LogError(ex, "[RTV.Hint] Failed to restore instructor convar. slot={Slot}", slot); }
                 }
             }
         }
@@ -455,7 +455,7 @@ namespace cs2_rockthevote
                 }
                 catch (Exception ex)
                 {
-                    _debugLogger.LogError(ex, "[RTV.MapChange] Plugin-owned poll callback failed. map={Map} trigger={Trigger}", winnerMapName, trigger);
+                    _logger.LogError(ex, "[RTV.MapChange] Plugin-owned poll callback failed. map={Map} trigger={Trigger}", winnerMapName, trigger);
                 }
             }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
         }
@@ -699,7 +699,7 @@ namespace cs2_rockthevote
                         }
                         catch (Exception ex)
                         {
-                            _plugin.Logger.LogError($"ChatCountdown timer callback failed: {ex.Message}");
+                            _logger.LogError(ex, "[RTV.EndMapVote] ChatCountdown timer callback failed: {Message}", ex.Message);
                         }
                     }, TimerFlags.STOP_ON_MAPCHANGE
                 );
@@ -739,7 +739,7 @@ namespace cs2_rockthevote
                     }
                     catch (Exception ex)
                     {
-                        _debugLogger.LogError(ex, "[Hint] Outer timer ShowHudInstructorHint failed. slot={Slot}", slot);
+                        _logger.LogError(ex, "[RTV.Hint] Outer timer ShowHudInstructorHint failed. slot={Slot}", slot);
                     }
                 }, TimerFlags.STOP_ON_MAPCHANGE);
                 _hintOuterTimers.Add(outerTimer);
@@ -761,7 +761,7 @@ namespace cs2_rockthevote
                     }
                     catch (Exception ex)
                     {
-                        _debugLogger.LogError(ex, "[RTV.Hint] Cleanup ReplicateConVar failed. slot={Slot}", s);
+                        _logger.LogError(ex, "[RTV.Hint] Cleanup ReplicateConVar failed. slot={Slot}", s);
                     }
                 }
             }, TimerFlags.STOP_ON_MAPCHANGE);
@@ -803,7 +803,7 @@ namespace cs2_rockthevote
             }
             catch (Exception ex)
             {
-                _debugLogger.LogError(ex, "[RTV.Hint] AcceptInput ShowHint failed");
+                _logger.LogError(ex, "[RTV.Hint] AcceptInput ShowHint failed");
                 return;
             }
 
@@ -822,7 +822,7 @@ namespace cs2_rockthevote
                 }
                 catch (Exception ex)
                 {
-                    _debugLogger.LogError(ex, "[RTV.Hint] Cleanup timer failed. slot={Slot}", controllerSlot);
+                    _logger.LogError(ex, "[RTV.Hint] Cleanup timer failed. slot={Slot}", controllerSlot);
                 }
             }, TimerFlags.STOP_ON_MAPCHANGE);
             if (convarResetTimer != null)
@@ -852,7 +852,7 @@ namespace cs2_rockthevote
                     }
                     catch (Exception ex)
                     {
-                        _debugLogger.LogError(ex, "[RTV.Hint] RemoveEntity timer failed");
+                        _logger.LogError(ex, "[RTV.Hint] RemoveEntity timer failed");
                     }
                 }, TimerFlags.STOP_ON_MAPCHANGE);
                 _hintOuterTimers.Add(removeTimer);
@@ -978,7 +978,7 @@ namespace cs2_rockthevote
                 }
                 catch (Exception ex)
                 {
-                    _debugLogger.LogError(ex, "[RTV.EndMapVote] StartVote per-player setup failed. slot={Slot}", slot);
+                    _logger.LogError(ex, "[RTV.EndMapVote] StartVote per-player setup failed. slot={Slot}", slot);
                 }
             }
 
@@ -1040,7 +1040,7 @@ namespace cs2_rockthevote
                 }
                 catch (Exception ex)
                 {
-                    _debugLogger.LogError(ex, "[RTV.EndMapVote] CloseActiveMenu failed. slot={Slot}", slot);
+                    _logger.LogError(ex, "[RTV.EndMapVote] CloseActiveMenu failed. slot={Slot}", slot);
                 }
             }
         }
@@ -1141,7 +1141,7 @@ namespace cs2_rockthevote
                     }
                     else
                     {
-                        _debugLogger.LogWarning("[RTV.EndMapVote] Extend won but apply failed. minutes={Minutes}", _generalConfig.RoundTimeExtension);
+                        _logger.LogWarning("[RTV.EndMapVote] Extend won but apply failed. minutes={Minutes}", _generalConfig.RoundTimeExtension);
                         Server.PrintToChatAll(_localizer.LocalizeWithPrefix("extendtime.vote-ended.failed", percent, totalVotes));
                     }
                 }

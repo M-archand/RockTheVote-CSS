@@ -1,10 +1,11 @@
-﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
 using CounterStrikeSharp.API.Modules.Timers;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace cs2_rockthevote
 {
@@ -23,6 +24,7 @@ namespace cs2_rockthevote
     public class RockTheVoteCommand : IPluginDependency<Plugin, Config>
     {
         private readonly ILogger<RockTheVoteCommand> _logger;
+        private ILogger _debugLogger = NullLogger.Instance;
         private readonly StringLocalizer _localizer;
         private readonly GameRules _gameRules;
         private readonly EndMapVoteManager _endmapVoteManager;
@@ -73,10 +75,11 @@ namespace cs2_rockthevote
         {
             _config = config.Rtv;
             _generalConfig = config.General;
+            _debugLogger = DebugLog.For(_logger, config);
 
             if (_config.EnablePanoramaVote && _config.AlwaysActive)
             {
-                _logger.LogWarning("[RTV.rtvCommand] Rtv.EnablePanorama and Rtv.AlwaysActive are both enabled in your config but they are incompatible; forcing AlwaysActive=false so the panorama vote is used.");
+                _logger.LogWarning("[RTV.RtvCommand] Rtv.EnablePanorama and Rtv.AlwaysActive are both enabled in your config but they are incompatible; forcing AlwaysActive=false so the panorama vote is used.");
                 _config.AlwaysActive = false;
             }
 
@@ -84,7 +87,7 @@ namespace cs2_rockthevote
 
             if (!uint.TryParse(_config.SoundPath, out _) && !SoundEventHelper.IsFullVolume(_config.SoundVolume))
             {
-                _logger.LogWarning("[RTV.rtvCommand] To modify the sound volume (any value aside from 1) you need to use the soundevent_hash rather than the sound path. E.g. 1974266470 for felix_broken_fang_pick_1_map_tk01");
+                _logger.LogWarning("[RTV.RtvCommand] To modify the sound volume (any value aside from 1) you need to use the soundevent_hash rather than the sound path. E.g. 1974266470 for felix_broken_fang_pick_1_map_tk01");
             }
         }
 
@@ -228,7 +231,9 @@ namespace cs2_rockthevote
                     return;
                 }
                 
-                Server.PrintToConsole($"[RockTheVote] RTV starting (caller: {Tag(player)}), IncludeAFK={_generalConfig.IncludeAFK}");
+                _debugLogger.LogInformation("[RTV.RtvCommand] RTV starting (caller: {Caller}), IncludeAFK={IncludeAFK}", Tag(player), _generalConfig.IncludeAFK);
+                if (_generalConfig.DebugLogging)
+                    Server.PrintToConsole($"[RTV.RtvCommand] RTV starting (caller: {Tag(player)}), IncludeAFK={_generalConfig.IncludeAFK}");
 
                 if (usePanorama)
                 {
@@ -256,8 +261,13 @@ namespace cs2_rockthevote
                         _afk.CheckAllPlayers();
 
                         var eligible = EligiblePlayers().ToList(); // this should already exclude AFK
-                        Server.PrintToConsole($"[RockTheVote] RTV vote started. Eligible (non-AFK) players = {eligible.Count}: " +
-                            string.Join(", ", eligible.Select(Tag)));
+                        if (_generalConfig.DebugLogging)
+                        {
+                            string roster = string.Join(", ", eligible.Select(Tag));
+                            _debugLogger.LogInformation("[RTV.RtvCommand] RTV vote started. Eligible (non-AFK) players = {Count}: {Players}",
+                                eligible.Count, roster);
+                            Server.PrintToConsole($"[RTV.RtvCommand] RTV vote started. Eligible (non-AFK) players = {eligible.Count}: {roster}");
+                        }
 
                         // Build recipient list excluding afk's
                         var filter = new RecipientFilter();
@@ -374,7 +384,7 @@ namespace cs2_rockthevote
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[RTV.rtvCommand] Something went wrong with the rtv command: {Message}", ex.Message);
+                _logger.LogError(ex, "[RTV.RtvCommand] Something went wrong with the rtv command: {Message}", ex.Message);
             }
         }
 
@@ -440,7 +450,7 @@ namespace cs2_rockthevote
                                     }
                                     catch (Exception ex)
                                     {
-                                        _logger.LogError(ex, "Error during vote cancellation: {Message}", ex.Message);
+                                        _logger.LogError(ex, "[RTV.RtvCommand] Error during vote cancellation: {Message}", ex.Message);
                                     }
                                 });
                                 return;
@@ -457,7 +467,7 @@ namespace cs2_rockthevote
                                     }
                                     catch (Exception ex)
                                     {
-                                        _logger.LogError(ex, "[RTV.rtvCommand] Error during early vote pass: {Message}", ex.Message);
+                                        _logger.LogError(ex, "[RTV.RtvCommand] Error during early vote pass: {Message}", ex.Message);
                                     }
                                 });
                                 return;
@@ -466,7 +476,7 @@ namespace cs2_rockthevote
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "[RTV.rtvCommand] Error processing vote: {Message}", ex.Message);
+                        _logger.LogError(ex, "[RTV.RtvCommand] Error processing vote: {Message}", ex.Message);
                     }
                     break;
 
@@ -506,7 +516,7 @@ namespace cs2_rockthevote
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "[RTV.rtvCommand] ChatCountdown timer callback failed: {Message}", ex.Message);
+                        _logger.LogError(ex, "[RTV.RtvCommand] ChatCountdown timer callback failed: {Message}", ex.Message);
                     }
                 }, TimerFlags.STOP_ON_MAPCHANGE
             );
@@ -532,7 +542,7 @@ namespace cs2_rockthevote
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "[RTV.rtvCommand] RTV reminder failed: {Message}", ex.Message);
+                        _logger.LogError(ex, "[RTV.RtvCommand] RTV reminder failed: {Message}", ex.Message);
                     }
                 },
                 TimerFlags.STOP_ON_MAPCHANGE | TimerFlags.REPEAT
@@ -655,7 +665,7 @@ namespace cs2_rockthevote
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "[RTV.rtvCommand] Post-disconnect threshold re-check failed: {Message}", ex.Message);
+                        _logger.LogError(ex, "[RTV.RtvCommand] Post-disconnect threshold re-check failed: {Message}", ex.Message);
                     }
                 });
             }

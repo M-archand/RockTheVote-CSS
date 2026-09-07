@@ -3,6 +3,7 @@ using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Extensions;
 using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace cs2_rockthevote.Core
 {
@@ -45,6 +46,7 @@ namespace cs2_rockthevote.Core
         };
 
         private readonly ILogger<CustomHud> _logger;
+        private ILogger _debugLogger = NullLogger.Instance;
         private PanoramaMenuConfig _panoramaConfig = new();
         private CCSCustomHudLayout? _hud;
         private readonly List<string> _options = new();
@@ -67,6 +69,7 @@ namespace cs2_rockthevote.Core
         {
             _panoramaConfig = config.PanoramaMenu;
             _warnedBadPosition = false;
+            _debugLogger = DebugLog.For(_logger, config);
         }
 
         public void OnMapStart(string mapName)
@@ -97,7 +100,7 @@ namespace cs2_rockthevote.Core
             var hud = Utilities.CreateEntityByName<CCSCustomHudLayout>("custom_hud_layout");
             if (hud == null || !hud.IsValid)
             {
-                logger.LogWarning("[RTV.CustomHud] Failed to create custom_hud_layout entity.");
+                logger.LogError("[RTV.CustomHud] Failed to create custom_hud_layout entity.");
                 return null;
             }
 
@@ -145,13 +148,13 @@ namespace cs2_rockthevote.Core
                         hud.SetInputCaptureEnabled(player, true);
                 }
 
-                _logger.LogInformation("[RTV.CustomHud] Spawned custom_hud_layout #{Index} with layout '{Layout}' and {Count} options.",
+                _debugLogger.LogInformation("[RTV.CustomHud] Spawned custom_hud_layout #{Index} with layout '{Layout}' and {Count} options.",
                     hud.Index, layout, _options.Count);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[RTV.CustomHud] Failed to populate/spawn the vote panel.");
+                _logger.LogError(ex, "[RTV.CustomHud] Failed to populate/spawn the vote panel.");
                 Destroy();
                 return false;
             }
@@ -174,7 +177,7 @@ namespace cs2_rockthevote.Core
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[RTV.CustomHud] Failed to highlight voted row {Row} for slot {Slot}.", row, player.Slot);
+                _logger.LogError(ex, "[RTV.CustomHud] Failed to highlight voted row {Row} for slot {Slot}.", row, player.Slot);
             }
         }
 
@@ -193,7 +196,7 @@ namespace cs2_rockthevote.Core
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[RTV.CustomHud] Failed to clear voted row for slot {Slot}.", player.Slot);
+                _logger.LogError(ex, "[RTV.CustomHud] Failed to clear voted row for slot {Slot}.", player.Slot);
             }
         }
 
@@ -223,7 +226,7 @@ namespace cs2_rockthevote.Core
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[RTV.CustomHud] Failed to show the winning row {Row}.", row);
+                _logger.LogError(ex, "[RTV.CustomHud] Failed to show the winning row {Row}.", row);
             }
         }
 
@@ -242,7 +245,7 @@ namespace cs2_rockthevote.Core
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[RTV.CustomHud] Failed to update the countdown timer.");
+                _logger.LogError(ex, "[RTV.CustomHud] Failed to update the countdown timer.");
             }
         }
 
@@ -262,7 +265,7 @@ namespace cs2_rockthevote.Core
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[RTV.CustomHud] Failed to update vote counters.");
+                _logger.LogError(ex, "[RTV.CustomHud] Failed to update vote counters.");
             }
         }
 
@@ -281,7 +284,7 @@ namespace cs2_rockthevote.Core
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[RTV.CustomHud] Failed to toggle panel visibility for slot {Slot}.", player.Slot);
+                _logger.LogError(ex, "[RTV.CustomHud] Failed to toggle panel visibility for slot {Slot}.", player.Slot);
             }
         }
 
@@ -311,7 +314,7 @@ namespace cs2_rockthevote.Core
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "[RTV.CustomHud] Failed to kill the vote panel entity.");
+                    _logger.LogError(ex, "[RTV.CustomHud] Failed to kill the vote panel entity.");
                 }
             }
         }
@@ -453,7 +456,7 @@ namespace cs2_rockthevote.Core
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "[RTV.CustomHud] Failed to apply panel state for slot {Slot}.", player.Slot);
+                    _logger.LogError(ex, "[RTV.CustomHud] Failed to apply panel state for slot {Slot}.", player.Slot);
                 }
             }
 
