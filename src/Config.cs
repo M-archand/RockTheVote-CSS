@@ -111,6 +111,7 @@ namespace cs2_rockthevote
     public class PanoramaMenuConfig
     {
         public string AddonName { get; set; } = "panorama/layout/custom_game/rockthevote.xml";
+        public bool   EnableClickVoting { get; set; } = true;
         public string MapVoteMenuPosition { get; set; } = "CenterLeft";
         public string MapVoteHeaderSize { get; set; } = "extralarge";
         public string MapVoteHeaderColor { get; set; } = "orange";

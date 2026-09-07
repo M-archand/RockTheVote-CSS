@@ -29,7 +29,6 @@ namespace cs2_rockthevote
         private readonly MapCooldown _mapCooldown;
         private readonly GameRules _gameRules;
         private readonly CustomHud _customHud;
-        private readonly CustomHudClickListener _customHudClickListener;
         private bool _activeVoteUsesPanorama = false;
         private Timer? Timer;
         private Timer? _nextVoteTimer;
@@ -79,7 +78,6 @@ namespace cs2_rockthevote
             TimeLimitManager timeLimitManager,
             GameRules gameRules,
             CustomHud customHud,
-            CustomHudClickListener customHudClickListener,
             ILogger<EndMapVoteManager> logger
         )
         {
@@ -93,7 +91,6 @@ namespace cs2_rockthevote
             _timeLimitManager = timeLimitManager;
             _gameRules = gameRules;
             _customHud = customHud;
-            _customHudClickListener = customHudClickListener;
             _logger = logger;
         }
 
@@ -103,13 +100,19 @@ namespace cs2_rockthevote
             _plugin.AddCommand("revote", "Re-open the active map vote menu.", OnRevoteCommand);
             _plugin.AddCommandListener("say", OnSayVote, HookMode.Pre);
             _plugin.AddCommandListener("say_team", OnSayVote, HookMode.Pre);
-            _customHudClickListener.OnHudClicked += OnPanoramaHudClicked;
+            _plugin.RegisterListener<Listeners.OnCustomHudClicked>(OnPanoramaHudClicked);
         }
 
-        // Click path for the panorama vote panel. Raised by CustomHudClickListener from its
-        // CustomHudClicked-receiver hook, so the actual work is deferred to the next frame.
-        private void OnPanoramaHudClicked(int playerSlot, nint layoutPointer, string buttonId)
+        // Click path for the panorama vote panel. CSS raises this from its
+        // CS_UM_CustomHudClicked usermessage hook, so the actual work is deferred to the
+        // next frame.
+        private void OnPanoramaHudClicked(CCSPlayerController player, CCSCustomHudLayout customLayout, string buttonId)
         {
+            if (player == null || !player.IsValid)
+                return;
+
+            int playerSlot = player.Slot;
+            nint layoutPointer = customLayout?.Handle ?? 0;
             Server.NextFrame(() => HandlePanoramaClick(playerSlot, layoutPointer, buttonId));
         }
 
@@ -143,7 +146,7 @@ namespace cs2_rockthevote
 
                 if (buttonId == "rtv_vote_close")
                 {
-                    _customHud.SetVisibleForPlayer(player.Slot, false);
+                    _customHud.SetVisibleForPlayer(player, false);
                     return;
                 }
 
@@ -215,7 +218,7 @@ namespace cs2_rockthevote
             CloseAllActiveMenus();
             plugin.RemoveCommandListener("say", OnSayVote, HookMode.Pre);
             plugin.RemoveCommandListener("say_team", OnSayVote, HookMode.Pre);
-            _customHudClickListener.OnHudClicked -= OnPanoramaHudClicked;
+            plugin.RemoveListener<Listeners.OnCustomHudClicked>(OnPanoramaHudClicked);
             _activeVoteUsesPanorama = false;
             _revoteMenuOpen.Clear();
             KillTimer();
@@ -288,8 +291,8 @@ namespace cs2_rockthevote
             return string.Equals(_endMapConfig.MenuType?.Trim(), "panorama", StringComparison.OrdinalIgnoreCase);
         }
 
-        // Chat-number voting applies only when a panorama vote could not enable click
-        // voting (click receiver hook unavailable), the panel is display-only then and
+        // Chat-number voting applies only when a panorama vote runs without click
+        // voting (PanoramaMenu.EnableClickVoting off), the panel is display only so 
         // chat is the input path.
         private bool PanoramaChatFallbackActive()
         {
@@ -486,7 +489,7 @@ namespace cs2_rockthevote
             // when the vote is running in the chat-number fallback)
             if (_activeVoteUsesPanorama)
             {
-                _customHud.SetVisibleForPlayer(player.Slot, true);
+                _customHud.SetVisibleForPlayer(player, true);
                 if (PanoramaChatFallbackActive())
                     PrintChatMapChoices(player);
                 return;
@@ -607,10 +610,10 @@ namespace cs2_rockthevote
                 // Persistent highlight on the chosen row while the panel stays open
                 int votedRow = _currentVoteOptions.IndexOf(mapName) + 1;
                 if (votedRow > 0)
-                    _customHud.SetVotedRow(slot, votedRow);
+                    _customHud.SetVotedRow(player, votedRow);
 
                 if (_generalConfig.HideHudAfterVote)
-                    _customHud.SetVisibleForPlayer(slot, false);
+                    _customHud.SetVisibleForPlayer(player, false);
             }
 
             // Keep the vote open for the full timer when revotes are enabled.
@@ -640,7 +643,7 @@ namespace cs2_rockthevote
             if (_activeVoteUsesPanorama)
             {
                 _customHud.UpdateCounts();
-                _customHud.ClearVotedRow(slot);
+                _customHud.ClearVotedRow(player);
             }
         }
 
@@ -947,7 +950,7 @@ namespace cs2_rockthevote
                     _localizer.Localize("emv.hud.menu-title"),
                     _currentVoteOptions,
                     option => Votes.TryGetValue(option, out int count) ? count : 0,
-                    clickVoting: _customHudClickListener.IsHooked);
+                    clickVoting: _panoramaConfig.EnableClickVoting);
 
                 if (_activeVoteUsesPanorama)
                     _customHud.UpdateTimer(voteDuration);

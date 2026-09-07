@@ -25,7 +25,8 @@ namespace cs2_rockthevote
         }
     }
 
-    [MinimumApiVersion(369)]
+    // v374 added CustomHudLayout API for panorama menu
+    [MinimumApiVersion(374)]
     public partial class Plugin(DependencyManager<Plugin, Config> dependencyManager,
         NominationCommand nominationManager,
         ChangeMapManager changeMapManager,

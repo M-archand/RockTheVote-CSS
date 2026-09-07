@@ -1,5 +1,6 @@
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
+using CounterStrikeSharp.API.Modules.Extensions;
 using Microsoft.Extensions.Logging;
 using System.Text.RegularExpressions;
 
@@ -36,10 +37,9 @@ namespace cs2_rockthevote.Core
         private RtvConfig _rtvConfig = new();
         private PanoramaMenuConfig _panoramaConfig = new();
         private Plugin? _plugin;
-        private CustomHudLayout? _hud;
+        private CCSCustomHudLayout? _hud;
         private int _remainingVotes;
         private int _barDuration;
-        private bool _barStarted;
         private bool _warnedBadPosition;
         private Func<int>? _remainingProvider;
         private CounterStrikeSharp.API.Modules.Timers.Timer? _refreshTimer;
@@ -53,7 +53,6 @@ namespace cs2_rockthevote.Core
         public void OnLoad(Plugin plugin)
         {
             _plugin = plugin;
-            plugin.RegisterEventHandler<EventPlayerConnectFull>(OnPlayerConnectFull);
         }
 
         public void OnConfigParsed(Config config)
@@ -88,12 +87,6 @@ namespace cs2_rockthevote.Core
                 return;
             }
 
-            if (!CustomHudLayout.IsSupported(_logger))
-            {
-                _logger.LogWarning("[RTV.Toast] custom_hud_layout unsupported: {Reason}", CustomHudLayout.UnavailableReason);
-                return;
-            }
-
             string layout = _panoramaConfig.AddonName?.Trim() ?? "";
             if (layout.Length == 0)
             {
@@ -101,24 +94,17 @@ namespace cs2_rockthevote.Core
                 return;
             }
 
-            var hud = CustomHudLayout.Create(_logger);
-            if (hud == null)
-                return;
-
-            _hud = hud;
             _remainingVotes = remainingVotes;
-            _barStarted = false;
             _barDuration = _rtvConfig.AlwaysActive ? 0 : NearestBarDuration(_rtvConfig.RtvVoteDuration);
 
             try
             {
-                foreach (var player in ServerManager.ValidPlayers())
-                    ApplyContent(player.Slot);
+                var hud = CustomHud.SpawnLayout(layout, "rtv_panorama_toast", _logger);
+                if (hud == null)
+                    return;
 
-                hud.Spawn(layout);
-
-                foreach (var player in ServerManager.ValidPlayers())
-                    ApplyContent(player.Slot);
+                _hud = hud;
+                ApplyContent();
 
                 // The drain is a width transition (100% -> 0%)
                 if (_barDuration > 0)
@@ -129,7 +115,7 @@ namespace cs2_rockthevote.Core
                         TimerFlags.STOP_ON_MAPCHANGE | TimerFlags.REPEAT);
 
                 _logger.LogInformation("[RTV.Toast] Spawned toast custom_hud_layout #{Index} (barDuration={Bar}s).",
-                    hud.EntityIndex, _barDuration);
+                    hud.Index, _barDuration);
             }
             catch (Exception ex)
             {
@@ -149,11 +135,8 @@ namespace cs2_rockthevote.Core
 
             try
             {
-                foreach (var player in ServerManager.ValidPlayers())
-                {
-                    SetToastVariable(hud, DescPanel, "rtv_toast_desc", desc, player.Slot);
-                    SetToastVariable(hud, DescNumPanel, "rtv_toast_desc_num", number, player.Slot);
-                }
+                SetToastVariable(hud, DescPanel, "rtv_toast_desc", desc);
+                SetToastVariable(hud, DescNumPanel, "rtv_toast_desc_num", number);
             }
             catch (Exception ex)
             {
@@ -193,7 +176,6 @@ namespace cs2_rockthevote.Core
         {
             var hud = _hud;
             _hud = null;
-            _barStarted = false;
             _remainingProvider = null;
             _refreshTimer?.Kill();
             _refreshTimer = null;
@@ -202,7 +184,7 @@ namespace cs2_rockthevote.Core
             {
                 try
                 {
-                    hud.Kill();
+                    hud.AcceptInput("Kill");
                 }
                 catch (Exception ex)
                 {
@@ -233,12 +215,9 @@ namespace cs2_rockthevote.Core
             if (_hud is not { IsValid: true } hud || _barDuration <= 0)
                 return;
 
-            _barStarted = true;
-
             try
             {
-                foreach (var player in ServerManager.ValidPlayers())
-                    hud.SetHasClass(BarPanel, BarRunClass, true, player.Slot);
+                hud.SetHasClass(BarPanel, BarRunClass, true);
             }
             catch (Exception ex)
             {
@@ -246,47 +225,44 @@ namespace cs2_rockthevote.Core
             }
         }
 
-        private void ApplyContent(int playerSlot)
+        private void ApplyContent()
         {
             if (_hud is not { IsValid: true } hud)
                 return;
 
-            hud.SetHasClass(DialogPanel, DialogHiddenClass, true, playerSlot);
-            hud.SetHasClass(ToastPanel, ToastOnClass, true, playerSlot);
+            hud.SetHasClass(DialogPanel, DialogHiddenClass, true);
+            hud.SetHasClass(ToastPanel, ToastOnClass, true);
 
             var (desc, number) = DescParts(_remainingVotes);
             var (instrPre, instrCmd, instrPost) = InstrParts();
-            SetToastVariable(hud, HeaderPanel, "rtv_toast_header", StripChatTags(Localize("rtv.panorama-header")), playerSlot);
-            SetToastVariable(hud, DescPanel, "rtv_toast_desc", desc, playerSlot);
-            SetToastVariable(hud, DescNumPanel, "rtv_toast_desc_num", number, playerSlot);
-            SetToastVariable(hud, InstrPanel, "rtv_toast_instr", instrPre, playerSlot);
-            SetToastVariable(hud, InstrCmdPanel, "rtv_toast_instr_cmd", instrCmd, playerSlot);
-            SetToastVariable(hud, InstrPostPanel, "rtv_toast_instr_post", instrPost, playerSlot);
+            SetToastVariable(hud, HeaderPanel, "rtv_toast_header", StripChatTags(Localize("rtv.panorama-header")));
+            SetToastVariable(hud, DescPanel, "rtv_toast_desc", desc);
+            SetToastVariable(hud, DescNumPanel, "rtv_toast_desc_num", number);
+            SetToastVariable(hud, InstrPanel, "rtv_toast_instr", instrPre);
+            SetToastVariable(hud, InstrCmdPanel, "rtv_toast_instr_cmd", instrCmd);
+            SetToastVariable(hud, InstrPostPanel, "rtv_toast_instr_post", instrPost);
 
-            hud.SetHasClass(InstrCmdPanel, GapClass, instrCmd.Length > 0 && instrPre.Length > 0, playerSlot);
-            hud.SetHasClass(InstrPostPanel, GapClass, instrPost.Length > 0 && !char.IsPunctuation(instrPost[0]), playerSlot);
+            hud.SetHasClass(InstrCmdPanel, GapClass, instrCmd.Length > 0 && instrPre.Length > 0);
+            hud.SetHasClass(InstrPostPanel, GapClass, instrPost.Length > 0 && !char.IsPunctuation(instrPost[0]));
 
-            ApplyPosition(hud, playerSlot);
-            ApplyHeaderStyle(hud, playerSlot);
-            ApplyTextStyle(hud, playerSlot);
+            ApplyPosition(hud);
+            ApplyHeaderStyle(hud);
+            ApplyTextStyle(hud);
 
             if (_barDuration > 0)
             {
-                hud.SetHasClass(BarTrackPanel, BarOnClass, true, playerSlot);
-                hud.SetHasClass(BarPanel, $"rtv-dur-{_barDuration}", true, playerSlot);
-
-                if (_barStarted)
-                    hud.SetHasClass(BarPanel, BarRunClass, true, playerSlot);
+                hud.SetHasClass(BarTrackPanel, BarOnClass, true);
+                hud.SetHasClass(BarPanel, $"rtv-dur-{_barDuration}", true);
             }
         }
 
-        private static void SetToastVariable(CustomHudLayout hud, string panelId, string variableName, string value, int playerSlot)
+        private static void SetToastVariable(CCSCustomHudLayout hud, string panelId, string variableName, string value)
         {
-            hud.SetDialogVariable(ToastPanel, variableName, value, playerSlot);
-            hud.SetDialogVariable(panelId, variableName, value, playerSlot);
+            hud.SetDialogVariableString(ToastPanel, variableName, value);
+            hud.SetDialogVariableString(panelId, variableName, value);
         }
 
-        private void ApplyPosition(CustomHudLayout hud, int playerSlot)
+        private void ApplyPosition(CCSCustomHudLayout hud)
         {
             string position = _panoramaConfig.RtvPosition?.Trim() ?? "";
             if (position.Length == 0)
@@ -294,7 +270,7 @@ namespace cs2_rockthevote.Core
 
             if (CustomHud.PositionClasses.TryGetValue(position, out var positionClass))
             {
-                hud.SetHasClass(ToastPanel, positionClass, true, playerSlot);
+                hud.SetHasClass(ToastPanel, positionClass, true);
             }
             else if (!_warnedBadPosition)
             {
@@ -304,19 +280,19 @@ namespace cs2_rockthevote.Core
             }
         }
 
-        private void ApplyHeaderStyle(CustomHudLayout hud, int playerSlot)
+        private void ApplyHeaderStyle(CCSCustomHudLayout hud)
         {
             string size = _panoramaConfig.RtvMapVoteHeaderSize?.Trim().ToLowerInvariant() ?? "normal";
-            hud.SetHasClass(HeaderPanel, "rtv-header-compact", size == "compact", playerSlot);
-            hud.SetHasClass(HeaderPanel, "rtv-header-large", size == "large", playerSlot);
-            hud.SetHasClass(HeaderPanel, "rtv-header-xlarge", size == "extralarge", playerSlot);
+            hud.SetHasClass(HeaderPanel, "rtv-header-compact", size == "compact");
+            hud.SetHasClass(HeaderPanel, "rtv-header-large", size == "large");
+            hud.SetHasClass(HeaderPanel, "rtv-header-xlarge", size == "extralarge");
 
             string color = _panoramaConfig.RtvMapVoteHeaderColor?.Trim().ToLowerInvariant() ?? "default";
             if (CustomHud.TextColors.Contains(color))
-                hud.SetHasClass(HeaderPanel, $"rtv-color-{color}", true, playerSlot);
+                hud.SetHasClass(HeaderPanel, $"rtv-color-{color}", true);
         }
 
-        private void ApplyTextStyle(CustomHudLayout hud, int playerSlot)
+        private void ApplyTextStyle(CCSCustomHudLayout hud)
         {
             string size = _panoramaConfig.RtvSize?.Trim().ToLowerInvariant() ?? "normal";
             bool compact = size == "compact";
@@ -328,12 +304,12 @@ namespace cs2_rockthevote.Core
 
             foreach (string panel in (string[])[DescPanel, DescNumPanel, InstrPanel, InstrCmdPanel, InstrPostPanel])
             {
-                hud.SetHasClass(panel, "rtv-text-compact", compact, playerSlot);
-                hud.SetHasClass(panel, "rtv-text-large", large, playerSlot);
-                hud.SetHasClass(panel, "rtv-text-xlarge", extraLarge, playerSlot);
+                hud.SetHasClass(panel, "rtv-text-compact", compact);
+                hud.SetHasClass(panel, "rtv-text-large", large);
+                hud.SetHasClass(panel, "rtv-text-xlarge", extraLarge);
 
                 if (hasColor && panel != DescNumPanel && panel != InstrCmdPanel)
-                    hud.SetHasClass(panel, $"rtv-color-{color}", true, playerSlot);
+                    hud.SetHasClass(panel, $"rtv-color-{color}", true);
             }
         }
 
@@ -351,27 +327,6 @@ namespace cs2_rockthevote.Core
 
         [GeneratedRegex(@"\{[a-zA-Z][a-zA-Z\-]*\}")]
         private static partial Regex ChatTagRegex();
-
-        private HookResult OnPlayerConnectFull(EventPlayerConnectFull @event, GameEventInfo info)
-        {
-            var player = @event.Userid;
-            if (player == null || !player.ReallyValid())
-                return HookResult.Continue;
-
-            if (IsActive)
-            {
-                try
-                {
-                    ApplyContent(player.Slot);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "[RTV.Toast] Failed to apply toast content for slot {Slot}.", player.Slot);
-                }
-            }
-
-            return HookResult.Continue;
-        }
 
         private static int NearestBarDuration(int seconds)
         {

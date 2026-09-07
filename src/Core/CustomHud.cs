@@ -1,10 +1,13 @@
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Extensions;
+using CounterStrikeSharp.API.Modules.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace cs2_rockthevote.Core
 {
     /// Renders the end-of-map vote on a custom_hud_layout Panorama panel shipped in a workshop addon.
-    /// Players vote by clicking the panel (CustomHudClickListener)
+    /// Players vote by clicking the panel buttons.
     public class CustomHud : IPluginDependency<Plugin, Config>
     {
         public const int MaxRows = 10;
@@ -43,7 +46,7 @@ namespace cs2_rockthevote.Core
 
         private readonly ILogger<CustomHud> _logger;
         private PanoramaMenuConfig _panoramaConfig = new();
-        private CustomHudLayout? _hud;
+        private CCSCustomHudLayout? _hud;
         private readonly List<string> _options = new();
         private Func<string, int>? _getVotes;
         private bool _clickVoting;
@@ -57,7 +60,6 @@ namespace cs2_rockthevote.Core
 
         public void OnLoad(Plugin plugin)
         {
-            CustomHudGameData.Load(plugin.ModuleDirectory, _logger);
             plugin.RegisterEventHandler<EventPlayerConnectFull>(OnPlayerConnectFull);
         }
 
@@ -77,29 +79,39 @@ namespace cs2_rockthevote.Core
             Destroy();
         }
 
-        public bool Available => CustomHudLayout.IsSupported(_logger);
-
         public bool IsActive => _hud is { IsValid: true };
 
         // True while the current panel captures the cursor for click voting
         public bool ClickVotingActive => _clickVoting && IsActive;
 
-        // True when a click receiver's layout pointer refers to the live panel
+        // True when a clicked layout entity is the live panel
         public bool MatchesLayout(nint layoutPointer)
         {
-            return layoutPointer != 0 && _hud is { IsValid: true } hud && hud.EntityPointer == layoutPointer;
+            return layoutPointer != 0 && _hud is { IsValid: true } hud && hud.Handle == layoutPointer;
+        }
+
+        // Creates+spawns a custom_hud_layout entity using the addon layout.
+        // Shared by the vote panel and the RTV toast.
+        internal static CCSCustomHudLayout? SpawnLayout(string layoutPath, string targetname, ILogger logger)
+        {
+            var hud = Utilities.CreateEntityByName<CCSCustomHudLayout>("custom_hud_layout");
+            if (hud == null || !hud.IsValid)
+            {
+                logger.LogWarning("[RTV.CustomHud] Failed to create custom_hud_layout entity.");
+                return null;
+            }
+
+            using var kv = new CEntityKeyValues();
+            kv.SetString("layout", layoutPath);
+            kv.SetString("targetname", targetname);
+            hud.DispatchSpawn(kv);
+            return hud;
         }
 
         // Spawns the vote panel and fills it for every connected player
         public bool Show(string title, IReadOnlyList<string> options, Func<string, int> getVotes, bool clickVoting = false)
         {
             Destroy();
-
-            if (!Available)
-            {
-                _logger.LogWarning("[RTV.CustomHud] custom_hud_layout unsupported: {Reason}", CustomHudLayout.UnavailableReason);
-                return false;
-            }
 
             string layout = _panoramaConfig.AddonName?.Trim() ?? "";
             if (layout.Length == 0)
@@ -108,11 +120,6 @@ namespace cs2_rockthevote.Core
                 return false;
             }
 
-            var hud = CustomHudLayout.Create(_logger);
-            if (hud == null)
-                return false;
-
-            _hud = hud;
             _options.Clear();
             _options.AddRange(options.Take(MaxRows));
             _getVotes = getVotes;
@@ -121,18 +128,25 @@ namespace cs2_rockthevote.Core
 
             try
             {
-                // Write the state before DispatchSpawn so the spawn baseline carries it,
-                // and once after in case the per-player rows only exist post-spawn.
-                foreach (var player in ServerManager.ValidPlayers())
-                    ApplyContent(title, player.Slot);
+                var hud = SpawnLayout(layout, "rtv_panorama_hud", _logger);
+                if (hud == null)
+                {
+                    Destroy();
+                    return false;
+                }
 
-                hud.Spawn(layout);
+                _hud = hud;
 
-                foreach (var player in ServerManager.ValidPlayers())
-                    ApplyContent(title, player.Slot);
+                ApplyGlobalContent(title);
+
+                if (_clickVoting)
+                {
+                    foreach (var player in ServerManager.ValidPlayers())
+                        hud.SetInputCaptureEnabled(player, true);
+                }
 
                 _logger.LogInformation("[RTV.CustomHud] Spawned custom_hud_layout #{Index} with layout '{Layout}' and {Count} options.",
-                    hud.EntityIndex, layout, _options.Count);
+                    hud.Index, layout, _options.Count);
                 return true;
             }
             catch (Exception ex)
@@ -143,59 +157,43 @@ namespace cs2_rockthevote.Core
             }
         }
 
-        /// Re-sends the panel content to one player (used for late joiners and revotes)
-        public void ApplyForPlayer(int playerSlot)
-        {
-            if (_hud is not { IsValid: true })
-                return;
-
-            try
-            {
-                ApplyContent(_lastTitle, playerSlot);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "[RTV.CustomHud] Failed to apply panel content for slot {Slot}.", playerSlot);
-            }
-        }
-
         // Highlights the row this player voted for (persistent "selected" style, distinct
         // from hover). Moving the vote moves the highlight.
-        public void SetVotedRow(int playerSlot, int row)
+        public void SetVotedRow(CCSPlayerController player, int row)
         {
-            if (_hud is not { IsValid: true } hud || row < 1 || row > MaxRows)
+            if (_hud is not { IsValid: true } hud || !player.IsValid || row < 1 || row > MaxRows)
                 return;
 
             try
             {
-                if (_votedRows.TryGetValue(playerSlot, out int previous) && previous != row)
-                    hud.SetHasClass($"{RowPanelPrefix}{previous}", RowVotedClass, false, playerSlot);
+                if (_votedRows.TryGetValue(player.Slot, out int previous) && previous != row)
+                    hud.SetHasClassForPlayer(player, $"{RowPanelPrefix}{previous}", RowVotedClass, false);
 
-                _votedRows[playerSlot] = row;
-                hud.SetHasClass($"{RowPanelPrefix}{row}", RowVotedClass, true, playerSlot);
+                _votedRows[player.Slot] = row;
+                hud.SetHasClassForPlayer(player, $"{RowPanelPrefix}{row}", RowVotedClass, true);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[RTV.CustomHud] Failed to highlight voted row {Row} for slot {Slot}.", row, playerSlot);
+                _logger.LogWarning(ex, "[RTV.CustomHud] Failed to highlight voted row {Row} for slot {Slot}.", row, player.Slot);
             }
         }
 
         // Removes a player's voted-row highlight (e.g. on disconnect)
-        public void ClearVotedRow(int playerSlot)
+        public void ClearVotedRow(CCSPlayerController player)
         {
-            if (!_votedRows.Remove(playerSlot, out int row))
+            if (!_votedRows.Remove(player.Slot, out int row))
                 return;
 
-            if (_hud is not { IsValid: true } hud)
+            if (_hud is not { IsValid: true } hud || !player.IsValid)
                 return;
 
             try
             {
-                hud.SetHasClass($"{RowPanelPrefix}{row}", RowVotedClass, false, playerSlot);
+                hud.SetHasClassForPlayer(player, $"{RowPanelPrefix}{row}", RowVotedClass, false);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[RTV.CustomHud] Failed to clear voted row for slot {Slot}.", playerSlot);
+                _logger.LogWarning(ex, "[RTV.CustomHud] Failed to clear voted row for slot {Slot}.", player.Slot);
             }
         }
 
@@ -213,13 +211,14 @@ namespace cs2_rockthevote.Core
 
             try
             {
+                hud.SetHasClass(ClosePanel, RowHiddenClass, true);
+                hud.SetHasClass($"{RowPanelPrefix}{row}", RowWinnerClass, true);
+                hud.SetDialogVariableString(TimerPanel, TimerPanel, "");
+
                 foreach (var player in ServerManager.ValidPlayers())
                 {
-                    hud.SetHasClass(DialogPanel, DialogHiddenClass, false, player.Slot);
-                    hud.SetHasClass(ClosePanel, RowHiddenClass, true, player.Slot);
-                    hud.SetHasClass($"{RowPanelPrefix}{row}", RowWinnerClass, true, player.Slot);
-                    hud.SetDialogVariable(TimerPanel, TimerPanel, "", player.Slot);
-                    hud.SetInputCaptureEnabled(false, player.Slot);
+                    hud.SetHasClassForPlayer(player, DialogPanel, DialogHiddenClass, false);
+                    hud.SetInputCaptureEnabled(player, false);
                 }
             }
             catch (Exception ex)
@@ -239,8 +238,7 @@ namespace cs2_rockthevote.Core
 
             try
             {
-                foreach (var player in ServerManager.ValidPlayers())
-                    hud.SetDialogVariable(TimerPanel, TimerPanel, _timerText, player.Slot);
+                hud.SetDialogVariableString(TimerPanel, TimerPanel, _timerText);
             }
             catch (Exception ex)
             {
@@ -256,12 +254,10 @@ namespace cs2_rockthevote.Core
 
             try
             {
-                var players = ServerManager.ValidPlayers();
                 for (int i = 0; i < _options.Count; i++)
                 {
                     string value = _getVotes(_options[i]).ToString();
-                    foreach (var player in players)
-                        hud.SetDialogVariable($"{RowCountPrefix}{i + 1}", $"{RowCountPrefix}{i + 1}", value, player.Slot);
+                    hud.SetDialogVariableString($"{RowCountPrefix}{i + 1}", $"{RowCountPrefix}{i + 1}", value);
                 }
             }
             catch (Exception ex)
@@ -270,22 +266,22 @@ namespace cs2_rockthevote.Core
             }
         }
 
-        public void SetVisibleForPlayer(int playerSlot, bool visible)
+        public void SetVisibleForPlayer(CCSPlayerController player, bool visible)
         {
-            if (_hud is not { IsValid: true } hud)
+            if (_hud is not { IsValid: true } hud || !player.IsValid)
                 return;
 
             try
             {
-                hud.SetHasClass(DialogPanel, DialogHiddenClass, !visible, playerSlot);
+                hud.SetHasClassForPlayer(player, DialogPanel, DialogHiddenClass, !visible);
 
                 // Hiding the panel alone would leave the player with a captured cursor
                 if (_clickVoting)
-                    hud.SetInputCaptureEnabled(visible, playerSlot);
+                    hud.SetInputCaptureEnabled(player, visible);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[RTV.CustomHud] Failed to toggle panel visibility for slot {Slot}.", playerSlot);
+                _logger.LogWarning(ex, "[RTV.CustomHud] Failed to toggle panel visibility for slot {Slot}.", player.Slot);
             }
         }
 
@@ -295,7 +291,6 @@ namespace cs2_rockthevote.Core
             _hud = null;
             _options.Clear();
             _getVotes = null;
-            _lastTitle = "";
             _timerText = "";
             _votedRows.Clear();
             bool clickVoting = _clickVoting;
@@ -309,10 +304,10 @@ namespace cs2_rockthevote.Core
                     if (clickVoting)
                     {
                         foreach (var player in ServerManager.ValidPlayers())
-                            hud.SetInputCaptureEnabled(false, player.Slot);
+                            hud.SetInputCaptureEnabled(player, false);
                     }
 
-                    hud.Kill();
+                    hud.AcceptInput("Kill");
                 }
                 catch (Exception ex)
                 {
@@ -321,24 +316,19 @@ namespace cs2_rockthevote.Core
             }
         }
 
-        private string _lastTitle = "";
-
-        private void ApplyContent(string title, int playerSlot)
+        private void ApplyGlobalContent(string title)
         {
             if (_hud is not { IsValid: true } hud)
                 return;
 
-            _lastTitle = title;
-
-            hud.SetDialogVariable(HeaderPanel, HeaderPanel, title, playerSlot);
-            hud.SetDialogVariable(TimerPanel, TimerPanel, _timerText, playerSlot);
-            ApplyMapVoteHeaderSize(hud, playerSlot);
-            ApplyMapVoteMenuPosition(hud, playerSlot);
+            hud.SetDialogVariableString(HeaderPanel, HeaderPanel, title);
+            hud.SetDialogVariableString(TimerPanel, TimerPanel, _timerText);
+            ApplyMapVoteHeaderSize(hud);
+            ApplyMapVoteMenuPosition(hud);
 
             // Without click support the Close button is dead UI. With it, it lets the
             // player dismiss the panel (and free their cursor) without voting.
-            hud.SetHasClass(ClosePanel, RowHiddenClass, !_clickVoting, playerSlot);
-            hud.SetInputCaptureEnabled(_clickVoting, playerSlot);
+            hud.SetHasClass(ClosePanel, RowHiddenClass, !_clickVoting);
 
             for (int i = 0; i < MaxRows; i++)
             {
@@ -349,18 +339,18 @@ namespace cs2_rockthevote.Core
 
                 // Written against the dialog, the row button, and the label. The client's
                 // dialog-variable scope resolution is not pinned down.
-                hud.SetDialogVariable(DialogPanel, $"rtv_option_{row}", value, playerSlot);
-                hud.SetDialogVariable($"{RowPanelPrefix}{row}", $"rtv_option_{row}", value, playerSlot);
-                hud.SetDialogVariable($"{RowLabelPrefix}{row}", $"rtv_option_{row}", value, playerSlot);
-                hud.SetDialogVariable($"{RowCountPrefix}{row}", $"{RowCountPrefix}{row}", count, playerSlot);
-                hud.SetHasClass($"{RowPanelPrefix}{row}", RowHiddenClass, !hasOption, playerSlot);
-                ApplyRowStyle(hud, row, playerSlot);
+                hud.SetDialogVariableString(DialogPanel, $"rtv_option_{row}", value);
+                hud.SetDialogVariableString($"{RowPanelPrefix}{row}", $"rtv_option_{row}", value);
+                hud.SetDialogVariableString($"{RowLabelPrefix}{row}", $"rtv_option_{row}", value);
+                hud.SetDialogVariableString($"{RowCountPrefix}{row}", $"{RowCountPrefix}{row}", count);
+                hud.SetHasClass($"{RowPanelPrefix}{row}", RowHiddenClass, !hasOption);
+                ApplyRowStyle(hud, row);
             }
         }
 
         private string _rowWidthClass = "";
 
-        // Estimates the pixel width needed for the longest "N. mapname" label 
+        // Estimates the pixel width needed for the longest "N. mapname" label
         // and adjusts it to the addon's width steps.
         private string ComputeRowWidthClass()
         {
@@ -388,31 +378,31 @@ namespace cs2_rockthevote.Core
             return $"rtv-w-{WidthSteps[^1]}";
         }
 
-        private void ApplyRowStyle(CustomHudLayout hud, int row, int playerSlot)
+        private void ApplyRowStyle(CCSCustomHudLayout hud, int row)
         {
             string size = _panoramaConfig.MapVoteRowSize?.Trim().ToLowerInvariant() ?? "normal";
             bool compact = size == "compact";
             bool large = size == "large";
             bool extraLarge = size == "extralarge";
 
-            hud.SetHasClass($"{RowPanelPrefix}{row}", "rtv-row-compact", compact, playerSlot);
-            hud.SetHasClass($"{RowLabelPrefix}{row}", "rtv-label-compact", compact, playerSlot);
-            hud.SetHasClass($"{RowPanelPrefix}{row}", "rtv-row-large", large, playerSlot);
-            hud.SetHasClass($"{RowLabelPrefix}{row}", "rtv-label-large", large, playerSlot);
-            hud.SetHasClass($"{RowPanelPrefix}{row}", "rtv-row-xlarge", extraLarge, playerSlot);
-            hud.SetHasClass($"{RowLabelPrefix}{row}", "rtv-label-xlarge", extraLarge, playerSlot);
+            hud.SetHasClass($"{RowPanelPrefix}{row}", "rtv-row-compact", compact);
+            hud.SetHasClass($"{RowLabelPrefix}{row}", "rtv-label-compact", compact);
+            hud.SetHasClass($"{RowPanelPrefix}{row}", "rtv-row-large", large);
+            hud.SetHasClass($"{RowLabelPrefix}{row}", "rtv-label-large", large);
+            hud.SetHasClass($"{RowPanelPrefix}{row}", "rtv-row-xlarge", extraLarge);
+            hud.SetHasClass($"{RowLabelPrefix}{row}", "rtv-label-xlarge", extraLarge);
 
             if (_rowWidthClass.Length > 0)
-                hud.SetHasClass($"{RowPanelPrefix}{row}", _rowWidthClass, true, playerSlot);
+                hud.SetHasClass($"{RowPanelPrefix}{row}", _rowWidthClass, true);
 
             string color = _panoramaConfig.MapVoteRowColor?.Trim().ToLowerInvariant() ?? "green";
             if (TextColors.Contains(color))
-                hud.SetHasClass($"{RowLabelPrefix}{row}", $"rtv-color-{color}", true, playerSlot);
+                hud.SetHasClass($"{RowLabelPrefix}{row}", $"rtv-color-{color}", true);
         }
 
         private bool _warnedBadPosition;
 
-        private void ApplyMapVoteMenuPosition(CustomHudLayout hud, int playerSlot)
+        private void ApplyMapVoteMenuPosition(CCSCustomHudLayout hud)
         {
             string position = _panoramaConfig.MapVoteMenuPosition?.Trim() ?? "";
             if (position.Length == 0)
@@ -420,7 +410,7 @@ namespace cs2_rockthevote.Core
 
             if (PositionClasses.TryGetValue(position, out var positionClass))
             {
-                hud.SetHasClass(DialogPanel, positionClass, true, playerSlot);
+                hud.SetHasClass(DialogPanel, positionClass, true);
             }
             else if (!_warnedBadPosition)
             {
@@ -430,17 +420,17 @@ namespace cs2_rockthevote.Core
             }
         }
 
-        private void ApplyMapVoteHeaderSize(CustomHudLayout hud, int playerSlot)
+        private void ApplyMapVoteHeaderSize(CCSCustomHudLayout hud)
         {
             string size = _panoramaConfig.MapVoteHeaderSize?.Trim().ToLowerInvariant() ?? "normal";
-            hud.SetHasClass(HeaderPanel, "rtv-header-compact", size == "compact", playerSlot);
-            hud.SetHasClass(HeaderPanel, "rtv-header-large", size == "large", playerSlot);
-            hud.SetHasClass(HeaderPanel, "rtv-header-xlarge", size == "extralarge", playerSlot);
+            hud.SetHasClass(HeaderPanel, "rtv-header-compact", size == "compact");
+            hud.SetHasClass(HeaderPanel, "rtv-header-large", size == "large");
+            hud.SetHasClass(HeaderPanel, "rtv-header-xlarge", size == "extralarge");
 
             // "default" (or anything not in the palette) keeps the layout's gold header
             string color = _panoramaConfig.MapVoteHeaderColor?.Trim().ToLowerInvariant() ?? "default";
             if (TextColors.Contains(color))
-                hud.SetHasClass(HeaderPanel, $"rtv-color-{color}", true, playerSlot);
+                hud.SetHasClass(HeaderPanel, $"rtv-color-{color}", true);
         }
 
         private HookResult OnPlayerConnectFull(EventPlayerConnectFull @event, GameEventInfo info)
@@ -449,8 +439,23 @@ namespace cs2_rockthevote.Core
             if (player == null || !player.ReallyValid())
                 return HookResult.Continue;
 
-            if (IsActive)
-                ApplyForPlayer(player.Slot);
+            if (_hud is { IsValid: true } hud)
+            {
+                try
+                {
+                    hud.SetHasClassForPlayer(player, DialogPanel, DialogHiddenClass, false);
+
+                    if (_votedRows.Remove(player.Slot, out int staleRow))
+                        hud.SetHasClassForPlayer(player, $"{RowPanelPrefix}{staleRow}", RowVotedClass, false);
+
+                    if (_clickVoting)
+                        hud.SetInputCaptureEnabled(player, true);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "[RTV.CustomHud] Failed to apply panel state for slot {Slot}.", player.Slot);
+                }
+            }
 
             return HookResult.Continue;
         }
