@@ -1,5 +1,6 @@
 using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Utils;
 using CounterStrikeSharp.API.Modules.Events;
 using CounterStrikeSharp.API.Modules.UserMessages;
@@ -106,7 +107,58 @@ namespace cs2_rockthevote
         /// Clears all vote states on map change.
         public void OnMapStart(string mapName) => Cleanup();
 
-        public void Unload(Plugin plugin) => Cleanup();
+        /// Store the default vote convars so Unload doesn't perm modify the server cvars
+        public void OnLoad(Plugin plugin)
+        {
+            _voteConVarBaseline.Clear();
+            foreach (var name in VoteConVarNames)
+            {
+                try
+                {
+                    var cvar = ConVar.Find(name);
+                    if (cvar != null)
+                        _voteConVarBaseline[name] = cvar.GetPrimitiveValue<bool>();
+                }
+                catch (Exception ex)
+                {
+                    _debugLogger.LogWarning(ex, "[RTV.PanoramaVote] Could not snapshot convar {ConVar}; it will not be restored on unload.", name);
+                }
+            }
+        }
+
+        public void Unload(Plugin plugin)
+        {
+            if (m_bIsVoteInProgress)
+            {
+                try
+                {
+                    EndVote(YesNoVoteEndReason.VoteEnd_Cancelled);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "[RTV.PanoramaVote] Failed to cancel the active vote during unload.");
+                }
+            }
+
+            Cleanup();
+            RestoreVoteConVars();
+        }
+
+        private static readonly string[] VoteConVarNames =
+        [
+            "sv_allow_votes",
+            "sv_vote_allow_in_warmup",
+            "sv_vote_allow_spectators",
+            "sv_vote_count_spectator_votes"
+        ];
+
+        private readonly Dictionary<string, bool> _voteConVarBaseline = new();
+
+        private void RestoreVoteConVars()
+        {
+            foreach (var (name, value) in _voteConVarBaseline)
+                Server.ExecuteCommand($"{name} {(value ? 1 : 0)}");
+        }
 
         public void Cleanup()
         {
