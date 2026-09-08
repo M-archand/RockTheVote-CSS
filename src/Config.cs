@@ -133,6 +133,11 @@ namespace cs2_rockthevote
         [JsonIgnore]
         public string[] AdminPermissions => PermissionUtility.Parse(AdminPermission);
 
+        public string ExtendPermission { get; set; } = "@css/admin,@css/changemap";
+
+        [JsonIgnore]
+        public string[] ExtendPermissions => PermissionUtility.Parse(ExtendPermission);
+
         public bool DebugLogging { get; set; } = false;
         public bool ForceMapChange { get; set; } = true;
         public int MaxMapExtensions { get; set; } = 2;

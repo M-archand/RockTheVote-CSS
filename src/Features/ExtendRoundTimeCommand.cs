@@ -1,7 +1,6 @@
 using CounterStrikeSharp.API.Core;
-using CounterStrikeSharp.API.Core.Attributes.Registration;
-using CounterStrikeSharp.API.Modules.Admin;
 using CounterStrikeSharp.API.Modules.Commands;
+using CounterStrikeSharp.API.Modules.Utils;
 using cs2_rockthevote.Core;
 using Microsoft.Extensions.Localization;
 
@@ -10,9 +9,14 @@ namespace cs2_rockthevote
     public partial class Plugin
     {
         [CommandHelper(minArgs: 1, usage: "<number of minutes to extend the map time e.g. 15>", whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
-        [RequiresPermissions("@css/changemap")]
         public void OnExtendRoundTimeCommand(CCSPlayerController? player, CommandInfo commandInfo)
         {
+            if (player != null && !PermissionUtility.HasAny(player, Config.General.ExtendPermissions))
+            {
+                commandInfo.ReplyToCommand($"[RTV] {ChatColors.Red}You do not have the correct permission to execute this command.");
+                return;
+            }
+
             var newRoundTime = commandInfo.GetArg(1);
 
             var intParseSuccess = int.TryParse(newRoundTime, out int newRoundTimeInt);
