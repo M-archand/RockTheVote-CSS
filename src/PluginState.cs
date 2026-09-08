@@ -2,6 +2,7 @@
 {
     public class PluginState : IPluginDependency<Plugin, Config>
     {
+        public bool Unloaded { get; set; }
         public bool MapChangeScheduled { get; set; }
         public bool EofVoteHappening { get; set; }
         public bool ExtendTimeVoteHappening { get; set; }

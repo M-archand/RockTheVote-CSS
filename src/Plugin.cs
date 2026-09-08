@@ -100,14 +100,15 @@ namespace cs2_rockthevote
             if (!_hasMenuManager)
             {
                 Server.PrintToConsole("[RTV.Plugin] CS2MenuManager API not found! It is required to use RockTheVote. Download it from here: https://github.com/schwarper/CS2MenuManager");
-                Logger.LogWarning("[RTV.Plugin] CS2MenuManager API not found! It is required to use RockTheVote. Download it from here: https://github.com/schwarper/CS2MenuManager");
-                return;
+                Logger.LogError("[RTV.Plugin] CS2MenuManager API not found! It is required to use RockTheVote. Download it from here: https://github.com/schwarper/CS2MenuManager");
+                TerminateSelf("CS2MenuManager is required by RockTheVote but was not found. Download it from https://github.com/schwarper/CS2MenuManager");
             }
 
         }
         
         public override void Unload(bool hotReload)
         {
+            _pluginState.Unloaded = true;
             RemoveListener<OnMapStart>(_dependencyManager.OnMapStart);
             _dependencyManager.OnPluginUnload(this);
         }

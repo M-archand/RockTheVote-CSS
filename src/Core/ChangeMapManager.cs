@@ -44,6 +44,7 @@ namespace cs2_rockthevote
         private Timer? _pendingMapChangeTimer;
         private Timer? _winPanelDelayTimer;
         private Timer? _mapChangeVerifyTimer;
+        private float? _preChangeTimeLimit;
 
         public ChangeMapManager(StringLocalizer localizer, PluginState pluginState, MapLister mapLister, ILogger<ChangeMapManager> logger)
         {
@@ -81,6 +82,7 @@ namespace cs2_rockthevote
             NextMap = null;
             _prefix = DEFAULT_PREFIX;
             _changeTrigger = MapChangeTrigger.RoundStart;
+            _preChangeTimeLimit = null;
 
             _pendingMapChangeTimer?.Kill();
             _pendingMapChangeTimer = null;
@@ -92,6 +94,9 @@ namespace cs2_rockthevote
 
         public void Unload(Plugin plugin)
         {
+            if (_mapChangeVerifyTimer != null)
+                RestorePreChangeTimeLimit();
+
             _pendingMapChangeTimer?.Kill();
             _pendingMapChangeTimer = null;
             _winPanelDelayTimer?.Kill();
@@ -210,7 +215,9 @@ namespace cs2_rockthevote
             {
                 _pluginState.MapChangeScheduled = false;
 
-                ConVar.Find("mp_timelimit")?.SetValue(0f);
+                var timeLimitCvar = ConVar.Find("mp_timelimit");
+                _preChangeTimeLimit ??= timeLimitCvar?.GetPrimitiveValue<float>();
+                timeLimitCvar?.SetValue(0f);
 
                 _debugLogger.LogInformation(
                     "[RTV.MapChange] Evaluating command path. map={Map} mapId={MapId} previousMap={PreviousMap}",
@@ -272,6 +279,15 @@ namespace cs2_rockthevote
             }
         }
 
+        private void RestorePreChangeTimeLimit()
+        {
+            if (_preChangeTimeLimit is { } value)
+            {
+                ConVar.Find("mp_timelimit")?.SetValue(value);
+                _preChangeTimeLimit = null;
+            }
+        }
+
         private void StartMapChangeVerifyTimer(Map map, string mapBefore)
         {
             // Create 45s verification timer. If we’re still on same map as when we started, pick random fallback map and try again
@@ -311,6 +327,7 @@ namespace cs2_rockthevote
                                 map.Name
                             );
                             Server.PrintToConsole($"[RTV.MapChange] Fallback selection failed. currentMap={current} requestedMap={map.Name}");
+                            RestorePreChangeTimeLimit();
                             return;
                         }
 

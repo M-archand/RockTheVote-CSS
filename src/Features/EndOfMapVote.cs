@@ -60,7 +60,7 @@ namespace cs2_rockthevote
         {
             KillTimer();
 
-            if (_plugin is null || !_config.Enabled)
+            if (_plugin is null || !_config.Enabled || _pluginState.Unloaded)
                 return;
 
             _timer = _plugin.AddTimer(1.0F, () =>

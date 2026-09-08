@@ -24,6 +24,7 @@ namespace cs2_rockthevote
     public class AFKManager : IPluginDependency<Plugin, Config>
     {
         private Plugin? _plugin;
+        private readonly PluginState _pluginState;
         private GeneralConfig _generalConfig = new();
         private readonly Dictionary<int, Vector> _lastOrigin = new();
         private readonly HashSet<int> _afkPlayers = new();
@@ -32,8 +33,9 @@ namespace cs2_rockthevote
         private readonly ILogger<AFKManager> _logger;
         private ILogger _debugLogger = NullLogger.Instance;
 
-        public AFKManager(ILogger<AFKManager> logger)
+        public AFKManager(PluginState pluginState, ILogger<AFKManager> logger)
         {
+            _pluginState = pluginState;
             _logger = logger;
         }
 
@@ -80,6 +82,9 @@ namespace cs2_rockthevote
 
         private void RestartAfkTimer()
         {
+            if (_pluginState.Unloaded)
+                return;
+
             KillAFKTimer();
 
             _timer = _plugin!.AddTimer(
