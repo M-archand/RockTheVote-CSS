@@ -97,12 +97,8 @@ namespace cs2_rockthevote
                     Server.ExecuteCommand("sv_vote_allow_spectators 1");
                     Server.ExecuteCommand("sv_vote_count_spectator_votes 1");
                     _pluginState.ExtendTimeVoteHappening = true;
-                    if (_voteExtendConfig.EnableCountdown && ConfigValue.Is(_voteExtendConfig.CountdownType, "chat"))
-                    {
-                        _extendRoundTimeManager.ChatCountdown(_voteExtendConfig.VoteDuration);
-                    }
 
-                    _panoramaVote.SendYesNoVoteToAll(
+                    bool voteStarted = _panoramaVote.SendYesNoVoteToAll(
                         _voteExtendConfig.VoteDuration,
                         player.Slot, // player.Slot Header = Vote by: playerName. VoteConstants.VOTE_CALLER_SERVER Header = Vote by: Server
                         "#SFUI_vote_passed_nextlevel_extend",
@@ -110,6 +106,23 @@ namespace cs2_rockthevote
                         VoteResultCallback,
                         VoteHandlerCallback
                     );
+
+                    if (!voteStarted)
+                    {
+                        _pluginState.ExtendTimeVoteHappening = false;
+                        Server.ExecuteCommand("sv_allow_votes 0");
+                        Server.ExecuteCommand("sv_vote_allow_in_warmup 0");
+                        Server.ExecuteCommand("sv_vote_allow_spectators 0");
+                        Server.ExecuteCommand("sv_vote_count_spectator_votes 0");
+                        _logger.LogWarning("[RTV.VoteExtendTime] Panorama extend vote failed to start; state reset.");
+                        player.PrintToChat(_localizer.LocalizeWithPrefix("general.vote-in-progress"));
+                        return;
+                    }
+
+                    if (_voteExtendConfig.EnableCountdown && ConfigValue.Is(_voteExtendConfig.CountdownType, "chat"))
+                    {
+                        _extendRoundTimeManager.ChatCountdown(_voteExtendConfig.VoteDuration);
+                    }
                 }
                 else
                 {
@@ -215,6 +228,7 @@ namespace cs2_rockthevote
                     break;
 
                 case YesNoVoteAction.VoteAction_End:
+                    _pluginState.ExtendTimeVoteHappening = false;
                     if ((YesNoVoteEndReason)param1 == YesNoVoteEndReason.VoteEnd_Cancelled)
                     {
                         Server.PrintToChatAll($"{_localizer.LocalizeWithPrefix("extendtime.vote-ended.failed2")}");
