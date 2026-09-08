@@ -87,8 +87,12 @@ namespace cs2_rockthevote.Core
             if (IsActive)
             {
                 UpdateRemaining(remainingVotes);
+                if (_refreshTimer == null)
+                    StartRefreshTimer();
                 return;
             }
+
+            StopRefreshTimer();
 
             string layout = _panoramaConfig.AddonName?.Trim() ?? "";
             if (layout.Length == 0)
@@ -113,9 +117,7 @@ namespace cs2_rockthevote.Core
                 if (_barDuration > 0)
                     _plugin?.AddTimer(0.1f, StartBar, TimerFlags.STOP_ON_MAPCHANGE);
 
-                if (_remainingProvider != null)
-                    _refreshTimer = _plugin?.AddTimer(RefreshInterval, RefreshFromProvider,
-                        TimerFlags.STOP_ON_MAPCHANGE | TimerFlags.REPEAT);
+                StartRefreshTimer();
 
                 _debugLogger.LogInformation("[RTV.Toast] Spawned toast custom_hud_layout #{Index} (barDuration={Bar}s).",
                     hud.Index, _barDuration);
@@ -180,8 +182,7 @@ namespace cs2_rockthevote.Core
             var hud = _hud;
             _hud = null;
             _remainingProvider = null;
-            _refreshTimer?.Kill();
-            _refreshTimer = null;
+            StopRefreshTimer();
 
             if (hud is { IsValid: true })
             {
@@ -196,10 +197,27 @@ namespace cs2_rockthevote.Core
             }
         }
 
+        private void StartRefreshTimer()
+        {
+            StopRefreshTimer();
+            if (_remainingProvider != null)
+                _refreshTimer = _plugin?.AddTimer(RefreshInterval, RefreshFromProvider,
+                    TimerFlags.STOP_ON_MAPCHANGE | TimerFlags.REPEAT);
+        }
+
+        private void StopRefreshTimer()
+        {
+            _refreshTimer?.Kill();
+            _refreshTimer = null;
+        }
+
         private void RefreshFromProvider()
         {
             if (_remainingProvider == null || _hud is not { IsValid: true })
+            {
+                StopRefreshTimer();
                 return;
+            }
 
             try
             {
