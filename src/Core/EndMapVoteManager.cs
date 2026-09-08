@@ -42,6 +42,7 @@ namespace cs2_rockthevote
         private readonly List<string> _currentVoteOptions = new();
         private int _canVote = 0;
         private bool _activeVoteIsRtv = false;
+        private bool _noVoteOptionsLogged = false;
         private Plugin? _plugin;
 
         public int TimeLeft { get; private set; } = -1;
@@ -207,6 +208,7 @@ namespace cs2_rockthevote
             TimeLeft = 0;
             mapsElected.Clear();
             _activeVoteUsesPanorama = false;
+            _noVoteOptionsLogged = false;
             KillTimer();
             KillNextVoteTimer();
             KillIgnoreWinConditionsPollTimer();
@@ -881,17 +883,7 @@ namespace cs2_rockthevote
             _revoteMenuOpen.Clear();
             _currentVoteOptions.Clear();
             _activeVoteIsRtv = isRtv;
-
-            if (_rtvConfig.EnablePanoramaVote)
-            {
-                Server.ExecuteCommand("sv_allow_votes 0");
-                Server.ExecuteCommand("sv_vote_allow_in_warmup 0");
-                Server.ExecuteCommand("sv_vote_allow_spectators 0");
-                Server.ExecuteCommand("sv_vote_count_spectator_votes 0");
-            }
-
             Votes.Clear();
-            _pluginState.EofVoteHappening = true;
 
             int maxExt = _generalConfig.MaxMapExtensions;
             bool unlimited = maxExt <= 0;  // treat 0 or negative as unlimited
@@ -945,6 +937,28 @@ namespace cs2_rockthevote
                 voteOptions.Add(extendOption);
             }
 
+            if (voteOptions.Count == 0)
+            {
+                if (!_noVoteOptionsLogged)
+                {
+                    _noVoteOptionsLogged = true;
+                    _logger.LogError(
+                        "[RTV.EndMapVote] Vote not started: no maps available. Every map is on cooldown and the extend option is unavailable. isRtv={IsRtv} mapCount={MapCount} mapsInCooldown={MapsInCooldown}",
+                        isRtv, _mapLister.Maps?.Length ?? 0, _mapCooldown.MapsOnCooldown.Count);
+                }
+                return;
+            }
+            _noVoteOptionsLogged = false;
+
+            if (_rtvConfig.EnablePanoramaVote)
+            {
+                Server.ExecuteCommand("sv_allow_votes 0");
+                Server.ExecuteCommand("sv_vote_allow_in_warmup 0");
+                Server.ExecuteCommand("sv_vote_allow_spectators 0");
+                Server.ExecuteCommand("sv_vote_count_spectator_votes 0");
+            }
+
+            _pluginState.EofVoteHappening = true;
             _currentVoteOptions.AddRange(voteOptions);
             RebuildSortedTopVotes();
             _canVote = ServerManager.ValidPlayerCount();
