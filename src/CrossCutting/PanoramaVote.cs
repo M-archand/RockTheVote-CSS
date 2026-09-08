@@ -188,21 +188,24 @@ namespace cs2_rockthevote
         }
 
         /// Handles the event when a vote is cast by a player.
-        public void VoteCast(GameEvent pEvent)
+        public void VoteCast(EventVoteCast pEvent)
         {
-            if (VoteController == null || !m_bIsVoteInProgress)
+            if (!m_bIsVoteInProgress || !HasValidController())
                 return;
 
             if (m_VoteHandler != null)
             {
-                var pVoter = new CCSPlayerController(NativeAPI.GetEventPlayerController(pEvent.Handle,"userid"));
-                if (pVoter == null) return;
-                m_VoteHandler(YesNoVoteAction.VoteAction_Vote, pVoter.Slot, NativeAPI.GetEventInt(pEvent.Handle, "vote_option"));
+                var pVoter = pEvent.Userid;
+                if (pVoter == null || !pVoter.IsValid)
+                    return;
+                m_VoteHandler(YesNoVoteAction.VoteAction_Vote, pVoter.Slot, pEvent.VoteOption);
             }
-            
+
             UpdateVoteCounts();
             CheckForEarlyVoteClose();
         }
+
+        private bool HasValidController() => VoteController != null && VoteController.IsValid;
 
         /// Removes a player from the current vote.
         public void RemovePlayerFromVote(int iSlot)
@@ -224,10 +227,10 @@ namespace cs2_rockthevote
             m_iVoterCount--;
             m_iVoters[m_iVoterCount] = -1;
 
-            if (VoteController == null || !VoteController.IsValid)
+            if (!HasValidController())
                 return;
 
-            VoteController.PotentialVotes = m_iVoterCount;
+            VoteController!.PotentialVotes = m_iVoterCount;
             UpdateVoteCounts();
             CheckForEarlyVoteClose();
         }
@@ -247,15 +250,17 @@ namespace cs2_rockthevote
         /// Updates the vote counts and fires a vote changed event.
         public void UpdateVoteCounts()
         {
-            if(VoteController == null)return;
-            
+            var vc = VoteController;
+            if (vc == null || !vc.IsValid)
+                return;
+
             var pEventPtr = NativeAPI.CreateEvent("vote_changed", true);
 
-            NativeAPI.SetEventInt(pEventPtr, "vote_option1", VoteController.VoteOptionCount[0]);
-            NativeAPI.SetEventInt(pEventPtr, "vote_option2", VoteController.VoteOptionCount[1]);
-            NativeAPI.SetEventInt(pEventPtr, "vote_option3", VoteController.VoteOptionCount[2]);
-            NativeAPI.SetEventInt(pEventPtr, "vote_option4", VoteController.VoteOptionCount[3]);
-            NativeAPI.SetEventInt(pEventPtr, "vote_option5", VoteController.VoteOptionCount[4]);
+            NativeAPI.SetEventInt(pEventPtr, "vote_option1", vc.VoteOptionCount[0]);
+            NativeAPI.SetEventInt(pEventPtr, "vote_option2", vc.VoteOptionCount[1]);
+            NativeAPI.SetEventInt(pEventPtr, "vote_option3", vc.VoteOptionCount[2]);
+            NativeAPI.SetEventInt(pEventPtr, "vote_option4", vc.VoteOptionCount[3]);
+            NativeAPI.SetEventInt(pEventPtr, "vote_option5", vc.VoteOptionCount[4]);
             NativeAPI.SetEventInt(pEventPtr, "potentialVotes", m_iVoterCount);
 
             NativeAPI.FireEvent(pEventPtr, false);
@@ -282,9 +287,6 @@ namespace cs2_rockthevote
         /// Starts a new Yes/No vote for Specific Players.
         public bool SendYesNoVote(float flDuration, int iCaller, string sVoteTitle, string sDetailStr, RecipientFilter pFilter, YesNoVoteResult resultCallback, YesNoVoteHandler? handler = null)
         {
-            if(VoteController == null)
-                return false;
-
             if (m_bIsVoteInProgress)
             {
                 _debugLogger.LogWarning("[RTV.PanoramaVote] A vote is already in progress.");
@@ -297,14 +299,23 @@ namespace cs2_rockthevote
             if (resultCallback == null)
                 return false;
 
-            Reset(VoteController);
+            if (!HasValidController())
+                Init();
+            var vc = VoteController;
+            if (vc == null || !vc.IsValid)
+            {
+                _logger.LogWarning("[RTV.PanoramaVote] No valid vote_controller entity, cannot start a panorama vote.");
+                return false;
+            }
+
+            Reset(vc);
 
             m_bIsVoteInProgress = true;
             CurrentVotefilter = pFilter;
             InitVoters(pFilter);
 
-            VoteController.PotentialVotes = m_iVoterCount;
-            VoteController.ActiveIssueIndex = 2;
+            vc.PotentialVotes = m_iVoterCount;
+            vc.ActiveIssueIndex = 2;
 
             m_VoteResult = resultCallback;
             m_VoteHandler = handler;
@@ -367,9 +378,11 @@ namespace cs2_rockthevote
         /// Checks if the vote can be closed early based on the number of votes cast.
         private void CheckForEarlyVoteClose()
         {
-            if(VoteController == null)return;
+            var vc = VoteController;
+            if (vc == null || !vc.IsValid)
+                return;
 
-            int votes = VoteController.VoteOptionCount[(int)CastVote.VOTE_OPTION1] + VoteController.VoteOptionCount[(int)CastVote.VOTE_OPTION2];
+            int votes = vc.VoteOptionCount[(int)CastVote.VOTE_OPTION1] + vc.VoteOptionCount[(int)CastVote.VOTE_OPTION2];
             if (votes >= m_iVoterCount)
             {
                 Server.NextFrame(() => EndVote(YesNoVoteEndReason.VoteEnd_AllVotes));
@@ -404,7 +417,8 @@ namespace cs2_rockthevote
             if (m_VoteHandler != null)
                 m_VoteHandler(YesNoVoteAction.VoteAction_End, (int)reason, 0);
 
-            if (VoteController == null)
+            var vc = VoteController;
+            if (vc == null || !vc.IsValid)
             {
                 SendVoteFailed(reason, overrideFailCode);
                 return;
@@ -413,23 +427,23 @@ namespace cs2_rockthevote
             if (m_VoteResult == null || reason == YesNoVoteEndReason.VoteEnd_Cancelled)
             {
                 SendVoteFailed(reason, overrideFailCode);
-                VoteController.ActiveIssueIndex = -1;
+                vc.ActiveIssueIndex = -1;
                 return;
             }
 
             var info = new YesNoVoteInfo
             {
                 num_clients = m_iVoterCount,
-                yes_votes   = VoteController.VoteOptionCount[(int)CastVote.VOTE_OPTION1],
-                no_votes    = VoteController.VoteOptionCount[(int)CastVote.VOTE_OPTION2],
-                num_votes   = VoteController.VoteOptionCount[(int)CastVote.VOTE_OPTION1]
-                            + VoteController.VoteOptionCount[(int)CastVote.VOTE_OPTION2]
+                yes_votes   = vc.VoteOptionCount[(int)CastVote.VOTE_OPTION1],
+                no_votes    = vc.VoteOptionCount[(int)CastVote.VOTE_OPTION2],
+                num_votes   = vc.VoteOptionCount[(int)CastVote.VOTE_OPTION1]
+                            + vc.VoteOptionCount[(int)CastVote.VOTE_OPTION2]
             };
 
             for (int i = 0; i < CurrentVotefilter.Count; i++)
             {
                 if (i < m_iVoterCount)
-                    info.clientInfo[i] = (m_iVoters[i], VoteController.VotesCast[m_iVoters[i]]);
+                    info.clientInfo[i] = (m_iVoters[i], vc.VotesCast[m_iVoters[i]]);
                 else
                     info.clientInfo[i] = (-1, -1);
             }
