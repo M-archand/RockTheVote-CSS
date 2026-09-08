@@ -218,11 +218,18 @@ namespace cs2_rockthevote
                     m_iVoters[i - 1] = m_iVoters[i];
             }
 
-            if (found)
-            {
-                m_iVoterCount--;
-                m_iVoters[m_iVoterCount] = -1;
-            }
+            if (!found)
+                return;
+
+            m_iVoterCount--;
+            m_iVoters[m_iVoterCount] = -1;
+
+            if (VoteController == null || !VoteController.IsValid)
+                return;
+
+            VoteController.PotentialVotes = m_iVoterCount;
+            UpdateVoteCounts();
+            CheckForEarlyVoteClose();
         }
 
         /// Checks if a player is in the current vote pool.
