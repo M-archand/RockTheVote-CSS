@@ -14,6 +14,15 @@ namespace cs2_rockthevote.CrossCutting
         private readonly StringLocalizer _localizer;
         private readonly StringBuilder _hudBuilder = new();
         private readonly bool[] _activeSlots = new bool[VoteConstants.MAXPLAYERS];
+        private string _emvCountdownText = string.Empty;
+        private int _emvCountdownTimeLeft = int.MinValue;
+        private string _rtvCountdownText = string.Empty;
+        private int _rtvCountdownTimeLeft = int.MinValue;
+        private string _extendCountdownText = string.Empty;
+        private int _extendCountdownTimeLeft = int.MinValue;
+        private string _hudMenuText = string.Empty;
+        private int _hudMenuTimeLeft = int.MinValue;
+        private IReadOnlyList<KeyValuePair<string, int>>? _hudMenuVotes;
         private Plugin? _plugin;
         private bool _hooked;
         private GeneralConfig _generalConfig = new();
@@ -38,9 +47,19 @@ namespace cs2_rockthevote.CrossCutting
             _voteExtendConfig = config.VoteExtend;
             _nomConfig = config.Nominate;
             _rtvConfig = config.Rtv;
+            ResetRenderCache();
 
             if (_plugin != null)
                 ApplyHookState(_plugin);
+        }
+
+        private void ResetRenderCache()
+        {
+            _emvCountdownTimeLeft = int.MinValue;
+            _rtvCountdownTimeLeft = int.MinValue;
+            _extendCountdownTimeLeft = int.MinValue;
+            _hudMenuTimeLeft = int.MinValue;
+            _hudMenuVotes = null;
         }
 
         public void OnLoad(Plugin plugin)
@@ -100,6 +119,7 @@ namespace cs2_rockthevote.CrossCutting
         public void OnMapStart(string map)
         {
             Array.Clear(_activeSlots, 0, _activeSlots.Length);
+            ResetRenderCache();
 
             if (_hooked)
             {
@@ -159,35 +179,66 @@ namespace cs2_rockthevote.CrossCutting
             // EndMapVote HUD Countdown. Don't show if EnabledHudMenu true, otherwise this would be covered by the map list
             if (_endMapConfig.EnableCountdown && ConfigValue.Is(_endMapConfig.CountdownType, "hud") && _pluginState.EofVoteHappening && !ConfigValue.Is(_endMapConfig.MenuType, "HudMenu"))
             {
-                PrintCenterToAll(_localizer.Localize("emv.hud.timer", _endMap.TimeLeft));
+                int timeLeft = _endMap.TimeLeft;
+                if (timeLeft != _emvCountdownTimeLeft)
+                {
+                    _emvCountdownTimeLeft = timeLeft;
+                    _emvCountdownText = _localizer.Localize("emv.hud.timer", timeLeft);
+                }
+                PrintCenterToAll(_emvCountdownText);
             }
 
             // RTV HUD Countdown
             if (_rtvConfig.EnableCountdown && ConfigValue.Is(_rtvConfig.CountdownType, "hud") && _pluginState.RtvVoteHappening)
             {
-                PrintCenterToAll(_localizer.Localize("general.hud-countdown", _rtv.TimeLeft));
+                int timeLeft = _rtv.TimeLeft;
+                if (timeLeft != _rtvCountdownTimeLeft)
+                {
+                    _rtvCountdownTimeLeft = timeLeft;
+                    _rtvCountdownText = _localizer.Localize("general.hud-countdown", timeLeft);
+                }
+                PrintCenterToAll(_rtvCountdownText);
             }
 
             // VoteExtend HUD Countdown
             if (_voteExtendConfig.EnableCountdown && ConfigValue.Is(_voteExtendConfig.CountdownType, "hud") && _pluginState.ExtendTimeVoteHappening)
             {
-                PrintCenterToAll(_localizer.Localize("general.hud-countdown", _voteExtend.TimeLeft));
+                int timeLeft = _voteExtend.TimeLeft;
+                if (timeLeft != _extendCountdownTimeLeft)
+                {
+                    _extendCountdownTimeLeft = timeLeft;
+                    _extendCountdownText = _localizer.Localize("general.hud-countdown", timeLeft);
+                }
+                PrintCenterToAll(_extendCountdownText);
             }
 
             // HUD map vote list
             if (ConfigValue.Is(_endMapConfig.MenuType, "HudMenu") && _pluginState.EofVoteHappening)
             {
-                _hudBuilder.Clear();
-                _hudBuilder.Append($"<b><font color='yellow'>{_localizer.Localize("emv.hud.timer", _endMap.TimeLeft)}</font></b>");
+                int timeLeft = _endMap.TimeLeft;
+                var votes = _endMap.SortedTopVotes;
 
-                int idx = 1;
-                const string header = "<br><font color='yellow'>!{0}</font> {1} <font color='lime'>({2})</font>";
-                foreach (var kv in _endMap.SortedTopVotes)
+                if (timeLeft != _hudMenuTimeLeft || !ReferenceEquals(votes, _hudMenuVotes))
                 {
-                    _hudBuilder.AppendFormat(header, idx++, kv.Key, kv.Value);
+                    _hudMenuTimeLeft = timeLeft;
+                    _hudMenuVotes = votes;
+
+                    _hudBuilder.Clear();
+                    _hudBuilder.Append("<b><font color='yellow'>")
+                        .Append(_localizer.Localize("emv.hud.timer", timeLeft))
+                        .Append("</font></b>");
+
+                    int idx = 1;
+                    const string header = "<br><font color='yellow'>!{0}</font> {1} <font color='lime'>({2})</font>";
+                    foreach (var kv in votes)
+                    {
+                        _hudBuilder.AppendFormat(header, idx++, kv.Key, kv.Value);
+                    }
+
+                    _hudMenuText = _hudBuilder.ToString();
                 }
 
-                var hud = _hudBuilder.ToString();
+                var hud = _hudMenuText;
                 for (int slot = 0; slot < _activeSlots.Length; slot++)
                 {
                     if (!_activeSlots[slot])
