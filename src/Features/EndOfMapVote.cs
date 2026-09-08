@@ -1,4 +1,5 @@
-﻿using CounterStrikeSharp.API.Core;
+﻿using CounterStrikeSharp.API;
+using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Timers;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 using cs2_rockthevote.Core;
@@ -75,6 +76,7 @@ namespace cs2_rockthevote
         public void OnLoad(Plugin plugin)
         {
             _plugin = plugin;
+            Server.NextFrame(RestartTimer);
             plugin.RegisterEventHandler<EventRoundStart>((ev, info) =>
             {
                 RestartTimer();

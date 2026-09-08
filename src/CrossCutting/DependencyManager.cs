@@ -51,11 +51,11 @@ namespace cs2_rockthevote
             }
         }
 
-        public void OnPluginLoad(TPlugin plugin)
+        public void OnPluginLoad(TPlugin plugin, bool hotReload)
         {
             foreach (var service in Dependencies)
             {
-                service.OnLoad(plugin);
+                service.OnLoad(plugin, hotReload);
             }
         }
 

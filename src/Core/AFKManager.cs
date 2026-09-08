@@ -40,6 +40,8 @@ namespace cs2_rockthevote
         public void OnLoad(Plugin plugin)
         {
             _plugin = plugin;
+            if (!_generalConfig.IncludeAFK)
+                Server.NextFrame(RestartAfkTimer);
         }
 
         public void Unload(Plugin plugin)

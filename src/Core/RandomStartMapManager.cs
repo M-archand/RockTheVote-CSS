@@ -13,9 +13,11 @@ namespace cs2_rockthevote
         private GeneralConfig _generalConfig = new();
         private Plugin? _plugin;
 
-        public void OnLoad(Plugin plugin)
+        public void OnLoad(Plugin plugin, bool hotReload)
         {
             _plugin = plugin;
+            if (hotReload)
+                _firstMapStart = false;
         }
 
         public void Unload(Plugin plugin)

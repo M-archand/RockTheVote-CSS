@@ -76,7 +76,7 @@ namespace cs2_rockthevote
 
         public override void Load(bool hotReload)
         {
-            _dependencyManager.OnPluginLoad(this);
+            _dependencyManager.OnPluginLoad(this, hotReload);
             RegisterListener<OnMapStart>(_dependencyManager.OnMapStart);
 
             RegisterPluginCommandsAndEvents();
