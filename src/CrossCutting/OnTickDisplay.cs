@@ -13,7 +13,7 @@ namespace cs2_rockthevote.CrossCutting
         private readonly ExtendRoundTimeManager _voteExtend;
         private readonly StringLocalizer _localizer;
         private readonly StringBuilder _hudBuilder = new();
-        private readonly CCSPlayerController?[] _playerSlots = new CCSPlayerController?[VoteConstants.MAXPLAYERS];
+        private readonly bool[] _activeSlots = new bool[VoteConstants.MAXPLAYERS];
         private Plugin? _plugin;
         private bool _hooked;
         private GeneralConfig _generalConfig = new();
@@ -80,7 +80,7 @@ namespace cs2_rockthevote.CrossCutting
                 plugin.DeregisterEventHandler<EventPlayerConnectFull>(OnPlayerConnectFull);
                 plugin.DeregisterEventHandler<EventPlayerSpawn>(OnPlayerSpawnCache, HookMode.Pre);
                 plugin.DeregisterEventHandler<EventPlayerDisconnect>(OnPlayerDisconnectCache, HookMode.Pre);
-                Array.Clear(_playerSlots, 0, _playerSlots.Length);
+                Array.Clear(_activeSlots, 0, _activeSlots.Length);
                 _hooked = false;
             }
         }
@@ -99,7 +99,7 @@ namespace cs2_rockthevote.CrossCutting
 
         public void OnMapStart(string map)
         {
-            Array.Clear(_playerSlots, 0, _playerSlots.Length);
+            Array.Clear(_activeSlots, 0, _activeSlots.Length);
 
             if (_hooked)
             {
@@ -113,8 +113,8 @@ namespace cs2_rockthevote.CrossCutting
 
         private void CachePlayer(CCSPlayerController? player)
         {
-            if (player.ReallyValid() && player!.Slot >= 0 && player.Slot < _playerSlots.Length)
-                _playerSlots[player.Slot] = player;
+            if (player.ReallyValid() && player!.Slot >= 0 && player.Slot < _activeSlots.Length)
+                _activeSlots[player.Slot] = true;
         }
 
         private HookResult OnPlayerConnectFull(EventPlayerConnectFull @event, GameEventInfo info)
@@ -132,15 +132,19 @@ namespace cs2_rockthevote.CrossCutting
         private HookResult OnPlayerDisconnectCache(EventPlayerDisconnect @event, GameEventInfo info)
         {
             var player = @event.Userid;
-            if (player != null && player.Slot >= 0 && player.Slot < _playerSlots.Length)
-                _playerSlots[player.Slot] = null;
+            if (player != null && player.Slot >= 0 && player.Slot < _activeSlots.Length)
+                _activeSlots[player.Slot] = false;
             return HookResult.Continue;
         }
 
         private void PrintCenterToAll(string text)
         {
-            foreach (var player in _playerSlots)
+            for (int slot = 0; slot < _activeSlots.Length; slot++)
             {
+                if (!_activeSlots[slot])
+                    continue;
+
+                var player = Utilities.GetPlayerFromSlot(slot);
                 if (player != null && player.IsValid)
                     player.PrintToCenter(text);
             }
@@ -184,12 +188,16 @@ namespace cs2_rockthevote.CrossCutting
                 }
 
                 var hud = _hudBuilder.ToString();
-                foreach (var player in _playerSlots)
+                for (int slot = 0; slot < _activeSlots.Length; slot++)
                 {
-                    if (player == null || !player.IsValid)
+                    if (!_activeSlots[slot])
                         continue;
 
-                    if (_generalConfig.HideHudAfterVote && _endMap.VotedPlayers.Contains(player.Slot))
+                    if (_generalConfig.HideHudAfterVote && _endMap.VotedPlayers.Contains(slot))
+                        continue;
+
+                    var player = Utilities.GetPlayerFromSlot(slot);
+                    if (player == null || !player.IsValid)
                         continue;
 
                     player.PrintToCenterHtml(hud);
