@@ -180,8 +180,8 @@ namespace cs2_rockthevote
                 _logger.LogWarning("[RTV.EndMapVote] To modify the sound volume (any value aside from 1) you need to use the soundevent_hash rather than the sound path");
             }
 
-            // Check to make sure VoteDuration isn't >= TriggerSecondsBeforeEnd, if it is, use a fallback
-            if (_endMapConfig.VoteDuration >= _endMapConfig.TriggerSecondsBeforeEnd)
+            // Only applies when ForceMapChange starts the vote early, deferred votes run past 00:00 unconstrained.
+            if (_generalConfig.ForceMapChange && _endMapConfig.VoteDuration >= _endMapConfig.TriggerSecondsBeforeEnd)
             {
                 var original = _endMapConfig.VoteDuration;
                 var adjusted = Math.Max(1, _endMapConfig.TriggerSecondsBeforeEnd - 5);
@@ -377,6 +377,13 @@ namespace cs2_rockthevote
             }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
         }
 
+        // ForceMapChange=false + mp_ignore_round_win_conditions 1: vote starts at 00:00, map changes when it ends.
+        private bool DeferMapChangeUntilVoteEnds()
+        {
+            return !_generalConfig.ForceMapChange &&
+                   ConVar.Find("mp_ignore_round_win_conditions")?.GetPrimitiveValue<bool>() == true;
+        }
+
         public void ScheduleNextVote()
         {
             KillNextVoteTimer();
@@ -386,8 +393,9 @@ namespace cs2_rockthevote
                 if (_timeLimitManager.UnlimitedTime)
                     return;
 
+                float triggerSeconds = DeferMapChangeUntilVoteEnds() ? 0 : _endMapConfig.TriggerSecondsBeforeEnd;
                 float timeRemainingSeconds = (float)Math.Max(0, (double)_timeLimitManager.TimeRemaining);
-                if (timeRemainingSeconds <= _endMapConfig.TriggerSecondsBeforeEnd)
+                if (timeRemainingSeconds <= triggerSeconds)
                 {
                     KillNextVoteTimer();
                     _pluginState.EofVoteHappening = false;
@@ -1167,7 +1175,18 @@ namespace cs2_rockthevote
                     }
                     else if (ignoreRoundWinConditions)
                     {
-                        StartIgnoreWinConditionsPoll(winner.Key, MapChangeTrigger.IgnoredWinConditions);
+                        if (_generalConfig.ForceMapChange)
+                        {
+                            StartIgnoreWinConditionsPoll(winner.Key, MapChangeTrigger.IgnoredWinConditions);
+                        }
+                        else
+                        {
+                            _debugLogger.LogInformation(
+                                "[RTV.EndMapVote] ForceMapChange disabled: changing map now that the end-of-map vote finished. winner={Winner}",
+                                winner.Key
+                            );
+                            _changeMapManager.ChangeNextMap();
+                        }
                     }
                     else
                     {

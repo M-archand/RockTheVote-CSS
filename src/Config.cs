@@ -134,6 +134,7 @@ namespace cs2_rockthevote
         public string[] AdminPermissions => PermissionUtility.Parse(AdminPermission);
 
         public bool DebugLogging { get; set; } = false;
+        public bool ForceMapChange { get; set; } = true;
         public int MaxMapExtensions { get; set; } = 2;
         public string DisableMapExtensions { get; set; } = "";
 

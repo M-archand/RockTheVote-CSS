@@ -1,5 +1,6 @@
 ﻿using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
+using CounterStrikeSharp.API.Modules.Cvars;
 using CounterStrikeSharp.API.Modules.Timers;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 using cs2_rockthevote.Core;
@@ -14,6 +15,7 @@ namespace cs2_rockthevote
         private GameRules _gameRules = gameRules;
         private EndMapVoteManager _voteManager = voteManager;
         private EndOfMapConfig _config = new();
+        private GeneralConfig _generalConfig = new();
         private Timer? _timer;
         private Plugin? _plugin;
 
@@ -32,6 +34,13 @@ namespace cs2_rockthevote
         bool CheckTimeLeft()
         {
             return !_timeLimit.UnlimitedTime && _timeLimit.TimeRemaining <= _config.TriggerSecondsBeforeEnd;
+        }
+
+        // ForceMapChange=false + mp_ignore_round_win_conditions 1: vote starts at 00:00, map changes when it ends.
+        bool DeferMapChangeUntilVoteEnds()
+        {
+            return !_generalConfig.ForceMapChange &&
+                   ConVar.Find("mp_ignore_round_win_conditions")?.GetPrimitiveValue<bool>() == true;
         }
 
         public void StartVote()
@@ -65,10 +74,18 @@ namespace cs2_rockthevote
 
             _timer = _plugin.AddTimer(1.0F, () =>
             {
-                if (_gameRules is not null && !_gameRules.WarmupRunning && !_pluginState.DisableCommands && _timeLimit.TimeRemaining > 0)
+                if (_gameRules is null || _gameRules.WarmupRunning || _pluginState.DisableCommands)
+                    return;
+
+                if (DeferMapChangeUntilVoteEnds())
                 {
-                    if (CheckTimeLeft())
+                    if (!_timeLimit.UnlimitedTime && _timeLimit.TimeRemaining <= 0
+                        && !_pluginState.EofVoteHappening && !_pluginState.MapChangeScheduled)
                         StartVote();
+                }
+                else if (_timeLimit.TimeRemaining > 0 && CheckTimeLeft())
+                {
+                    StartVote();
                 }
             }, TimerFlags.REPEAT | TimerFlags.STOP_ON_MAPCHANGE);
         }
@@ -96,6 +113,7 @@ namespace cs2_rockthevote
         public void OnConfigParsed(Config config)
         {
             _config = config.EndOfMapVote;
+            _generalConfig = config.General;
         }
     }
 }
