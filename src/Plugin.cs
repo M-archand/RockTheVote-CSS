@@ -119,6 +119,8 @@ namespace cs2_rockthevote
 
             if (config.Version != Config.CurrentVersion)
                 Logger.LogWarning("[RTV.Plugin] Configuration version mismatch (Expected: {ExpectedVersion} | Current: {CurrentVersion})", Config.CurrentVersion, config.Version);
+
+            ConfigValidator.WarnMissingEntries(config, Logger);
         }
 
         [CommandHelper(whoCanExecute: CommandUsage.CLIENT_AND_SERVER)]
