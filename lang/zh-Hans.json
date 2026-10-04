@@ -57,6 +57,7 @@
   "rtv.in-progress": "{default} 一个 {red}!rtv {default}正在进行中。剩余所需票数：{green}{0}",
   "rtv.already-rocked-the-vote": "您已经大放异彩！",
   "rtv.votes-reached": "{green} 已达到投票数，正在开始投票...",
+  "rtv.votes-reached-delay": "{green} 已达到投票数，投票将在 {0} 秒后开始！",
   "rtv.failed": "{lightred} 投票失败！",
   "rtv.disabled": "{lightred}命令目前已禁用。",
   "rtv.cancelled": "{lightred}投票已取消。",

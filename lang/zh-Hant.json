@@ -57,6 +57,7 @@
   "rtv.in-progress": "{default} 一個 {red}!rtv {default}正在進行中。剩餘所需票數：{green}{0}",
   "rtv.already-rocked-the-vote": "你已經發起過換圖投票了",
   "rtv.votes-reached": "{green}票數已達標，開始投票...",
+  "rtv.votes-reached-delay": "{green}票數已達標，投票將在 {0} 秒後開始！",
   "rtv.failed": "{lightred}投票失敗！",
   "rtv.disabled": "{lightred}此指令目前已停用。",
   "rtv.cancelled": "{lightred}投票已被取消。",

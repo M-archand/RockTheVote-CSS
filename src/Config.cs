@@ -21,6 +21,7 @@ namespace cs2_rockthevote
         public bool AlwaysActiveReminder { get; set; } = true;
         public int ReminderInterval { get; set; } = 180;
         public int RtvVoteDuration { get; set; } = 60;
+        public int VoteStartDelay { get; set; } = 0;
         public int MapVoteDuration { get; set; } = 60;
         public int CooldownDuration { get; set; } = 180;
         public int MapStartDelay { get; set; } = 180;

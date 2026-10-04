@@ -43,6 +43,7 @@ namespace cs2_rockthevote
         private Timer? _cooldownTimer;
         private Timer? _rtvTimer;
         private Timer? _reminderTimer;
+        private Timer? _mapVoteDelayTimer;
 
         public int TimeLeft => (int)Math.Max(0, (_rtvEndTime - DateTime.UtcNow).TotalSeconds);
 
@@ -68,6 +69,7 @@ namespace cs2_rockthevote
         {
             StopRtvTimer();
             StopReminderTimer();
+            StopMapVoteDelayTimer();
             KillTimer();
         }
 
@@ -97,6 +99,7 @@ namespace cs2_rockthevote
             StopRtvTimer();
             KillTimer();
             StopReminderTimer();
+            StopMapVoteDelayTimer();
         }
 
         private bool TreatVotedPlayersAsActive() =>
@@ -180,6 +183,56 @@ namespace cs2_rockthevote
             _pluginState.RtvVoteHappening = false;
         }
 
+        private void StartMapVote()
+        {
+            if (_pluginState.RtvMapVotePending)
+                return;
+
+            int delay = _config.VoteStartDelay;
+            if (delay <= 0)
+            {
+                _endmapVoteManager.StartVote(isRtv: true);
+                return;
+            }
+
+            _pluginState.RtvMapVotePending = true;
+
+            if (_config.EnablePanoramaVote)
+            {
+                Server.ExecuteCommand("sv_allow_votes 0");
+                Server.ExecuteCommand("sv_vote_allow_in_warmup 0");
+                Server.ExecuteCommand("sv_vote_allow_spectators 0");
+                Server.ExecuteCommand("sv_vote_count_spectator_votes 0");
+            }
+
+            _mapVoteDelayTimer = _plugin!.AddTimer(delay, () =>
+            {
+                _mapVoteDelayTimer = null;
+                _pluginState.RtvMapVotePending = false;
+
+                try
+                {
+                    _endmapVoteManager.StartVote(isRtv: true);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "[RTV.RtvCommand] Delayed map vote start failed: {Message}", ex.Message);
+                }
+            }, TimerFlags.STOP_ON_MAPCHANGE);
+        }
+
+        private string VotesReachedMessage() =>
+            _config.VoteStartDelay > 0
+                ? _localizer.LocalizeWithPrefix("rtv.votes-reached-delay", _config.VoteStartDelay)
+                : _localizer.LocalizeWithPrefix("rtv.votes-reached");
+
+        private void StopMapVoteDelayTimer()
+        {
+            _mapVoteDelayTimer?.Kill();
+            _mapVoteDelayTimer = null;
+            _pluginState.RtvMapVotePending = false;
+        }
+
         public void CommandHandler(CCSPlayerController? player)
         {
             try
@@ -208,7 +261,7 @@ namespace cs2_rockthevote
                     player.PrintToChat(_localizer.LocalizeWithPrefix("rtv.cooldown", secondsInt));
                     return;
                 }
-                if (!_config.Enabled || (alwaysActive
+                if (!_config.Enabled || _pluginState.RtvMapVotePending || (alwaysActive
                         ? (_pluginState.MapChangeScheduled || _pluginState.EofVoteHappening)
                         : otherVoteInProgress))
                 {
@@ -334,8 +387,8 @@ namespace cs2_rockthevote
                                     StopRtvTimer();
                                 StopReminderTimer();
                                 _rtvToast.Hide();
-                                _endmapVoteManager.StartVote(isRtv: true);
-                                Server.PrintToChatAll(_localizer.LocalizeWithPrefix("rtv.votes-reached"));
+                                StartMapVote();
+                                Server.PrintToChatAll(VotesReachedMessage());
                             }
                             else
                                 _rtvToast.ShowOrUpdate(Math.Max(requiredYesVotes - result.VoteCount, 0), CurrentRemainingVotes);
@@ -351,8 +404,8 @@ namespace cs2_rockthevote
                                     StopRtvTimer();
                                 StopReminderTimer();
                                 _rtvToast.Hide();
-                                _endmapVoteManager.StartVote(isRtv: true);
-                                Server.PrintToChatAll(_localizer.LocalizeWithPrefix("rtv.votes-reached"));
+                                StartMapVote();
+                                Server.PrintToChatAll(VotesReachedMessage());
                             }
                             else
                                 _rtvToast.ShowOrUpdate(Math.Max(requiredYesVotes - result.VoteCount, 0), CurrentRemainingVotes);
@@ -370,9 +423,9 @@ namespace cs2_rockthevote
                                 StopRtvTimer();
                             StopReminderTimer();
                             _rtvToast.Hide();
-                            _endmapVoteManager.StartVote(isRtv: true);
+                            StartMapVote();
                             Server.PrintToChatAll($"{_localizer.LocalizeWithPrefix("rtv.rocked-the-vote", player.PlayerName)} {_localizer.Localize("general.votes-needed", result.VoteCount, requiredYesVotes)}");
-                            Server.PrintToChatAll(_localizer.LocalizeWithPrefix("rtv.votes-reached"));
+                            Server.PrintToChatAll(VotesReachedMessage());
                             break;
                     }
                 }
@@ -394,8 +447,8 @@ namespace cs2_rockthevote
 
             if (info.yes_votes >= requiredYesVotes)
             {
-                Server.PrintToChatAll($"{_localizer.LocalizeWithPrefix("rtv.votes-reached")}");
-                _endmapVoteManager.StartVote(isRtv: true);
+                Server.PrintToChatAll(VotesReachedMessage());
+                StartMapVote();
 
                 return true;
             }
@@ -562,7 +615,7 @@ namespace cs2_rockthevote
             if (_voteManager.VotesAlreadyReached || _voteManager.VoteCount == 0)
                 return;
 
-            if (_pluginState.MapChangeScheduled || _pluginState.EofVoteHappening)
+            if (_pluginState.MapChangeScheduled || _pluginState.EofVoteHappening || _pluginState.RtvMapVotePending)
                 return;
 
             bool countVotedAsActive = TreatVotedPlayersAsActive();
@@ -576,8 +629,8 @@ namespace cs2_rockthevote
                 StopRtvTimer();
             StopReminderTimer();
             _rtvToast.Hide();
-            _endmapVoteManager.StartVote(isRtv: true);
-            Server.PrintToChatAll(_localizer.LocalizeWithPrefix("rtv.votes-reached"));
+            StartMapVote();
+            Server.PrintToChatAll(VotesReachedMessage());
         }
 
         private void SendReminder()

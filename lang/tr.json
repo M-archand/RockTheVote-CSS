@@ -57,6 +57,7 @@
   "rtv.in-progress": "{default} Bir {red}!rtv {default}oylaması devam ediyor. Gerekli kalan oylar: {green}{0}",
   "rtv.already-rocked-the-vote": "Oyu sallamışsınız bile",
   "rtv.votes-reached": "{green}Oy sayısı ulaşıldı, oylama başlıyor...",
+  "rtv.votes-reached-delay": "{green}Oy sayısı ulaşıldı, oylama {0} saniye içinde başlıyor!",
   "rtv.failed": "{lightred}Oylama başarısız oldu!",
   "rtv.disabled": "{lightred}Komut şu anda devre dışı.",
   "rtv.cancelled": "{lightred}Oylama iptal edildi.",

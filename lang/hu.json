@@ -57,6 +57,7 @@
   "rtv.in-progress": "{default} Egy {red}!rtv {default}szavazás folyamatban. Hátralévő szükséges szavazatok: {green}{0}",
   "rtv.already-rocked-the-vote": "Már szavaztál",
   "rtv.votes-reached": "{green}Elért szavazatok száma, szavazás indítása...",
+  "rtv.votes-reached-delay": "{green}Elért szavazatok száma, a szavazás {0} másodperc múlva indul!",
   "rtv.failed": "{lightred}A szavazás sikertelen!",
   "rtv.disabled": "{lightred}A parancs jelenleg le van tiltva.",
   "rtv.cancelled": "{lightred}A szavazást törölték.",

@@ -57,6 +57,7 @@
   "rtv.in-progress": "{default} Trwa {red}!rtv {default}głosowanie. Pozostałe wymagane głosy: {green}{0}",
   "rtv.already-rocked-the-vote": "Już wygrałeś głosowanie",
   "rtv.votes-reached": "{green}Liczba głosów osiągnięta, rozpoczynamy głosowanie…",
+  "rtv.votes-reached-delay": "{green}Liczba głosów osiągnięta, głosowanie rozpocznie się za {0} sekund!",
   "rtv.failed": "{lightred}Głosowanie nieudane!",
   "rtv.disabled": "{lightred}Polecenie jest teraz wyłączone.",
   "rtv.cancelled": "{lightred}Głosowanie zostało anulowane.",

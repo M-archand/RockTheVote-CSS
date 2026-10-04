@@ -57,6 +57,7 @@
   "rtv.in-progress": "{default} An {red}!rtv {default}is in-progress. Remaining votes required: {green}{0}",
   "rtv.already-rocked-the-vote": "You already rocked the vote",
   "rtv.votes-reached": "{green}Number of votes reached, starting vote...",
+  "rtv.votes-reached-delay": "{green}Number of votes reached, starting vote in {0} seconds!",
   "rtv.failed": "{lightred}Vote failed!",
   "rtv.disabled": "{lightred}Command is disabled right now.",
   "rtv.cancelled": "{lightred}The vote was cancelled.",

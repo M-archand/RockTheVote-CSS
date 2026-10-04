@@ -57,6 +57,7 @@
   "rtv.in-progress": "{default} Триває {red}!rtv {default}голосування. Залишилось потрібних голосів: {green}{0}",
   "rtv.already-rocked-the-vote": "Ви вже вразили голосування",
   "rtv.votes-reached": "{green}Досягнуто кількості голосів, початок голосування...",
+  "rtv.votes-reached-delay": "{green}Досягнуто кількості голосів, голосування розпочнеться через {0} сек.!",
   "rtv.failed": "{lightred}Голосування не вдалося!",
   "rtv.disabled": "{lightred}Команда зараз вимкнена.",
   "rtv.cancelled": "{lightred}Голосування скасовано.",

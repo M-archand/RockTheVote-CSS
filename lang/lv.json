@@ -57,6 +57,7 @@
   "rtv.in-progress": "{default} Notiek {red}!rtv {default}balsojums. Atlikušās nepieciešamās balsis: {green}{0}",
   "rtv.already-rocked-the-vote": "Jūs jau esat veicis izmaiņas balsošanas rezultātos",
   "rtv.votes-reached": "{green}Sasniegto balsu skaits, sāk balsošanu...",
+  "rtv.votes-reached-delay": "{green}Sasniegto balsu skaits, balsošana sāksies pēc {0} sekundēm!",
   "rtv.failed": "{lightred}Balsošana neizdevās!",
   "rtv.disabled": "{lightred}Komanda pašlaik ir atspējota.",
   "rtv.cancelled": "{lightred}Balsojums tika atcelts.",

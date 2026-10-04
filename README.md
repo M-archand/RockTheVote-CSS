@@ -164,6 +164,7 @@ Things to know:
 | `AlwaysActiveReminder` | `true` | Periodically remind chat that an rtv is active and how many votes are still needed |
 | `ReminderInterval` | `180` | Seconds between reminders |
 | `RtvVoteDuration` | `60` | Length of the rtv vote in seconds (when `AlwaysActive` is `false`) |
+| `VoteStartDelay` | `0` | Seconds between a passed rtv and the start of the resulting map vote, announced in chat. `0` = the map vote starts instantly |
 | `MapVoteDuration` | `60` | Length of the resulting map vote in seconds |
 | `CooldownDuration` | `180` | Seconds before another `!rtv` can be started after one fails |
 | `MapStartDelay` | `180` | Seconds after map start before `!rtv` can be used |
@@ -306,6 +307,7 @@ Shared settings for everything drawn on the Panorama custom HUD: the End of Map 
     "AlwaysActiveReminder": true,
     "ReminderInterval": 180,
     "RtvVoteDuration": 60,
+    "VoteStartDelay": 0,
     "MapVoteDuration": 60,
     "CooldownDuration": 180,
     "MapStartDelay": 180,
