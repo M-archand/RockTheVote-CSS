@@ -67,6 +67,8 @@
   "rtv.instructions": "Используйте {0}, чтобы проголосовать!",
   "rtv.panorama-header": "RTV активен",
   "rtv.panorama-descripition": "Осталось голосов: {0}",
+  "rtv.panorama-delay-header": "RTV ПРИНЯТ!",
+  "rtv.panorama-delay-text": "ГОЛОСОВАНИЕ ЧЕРЕЗ...",
 
   "emv.you-voted": "Вы проголосовали за {0}",
   "emv.vote-started": "Голосование за следующую карту началось, сделайте свой выбор!",

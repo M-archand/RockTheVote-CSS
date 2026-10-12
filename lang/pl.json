@@ -67,6 +67,8 @@
    "rtv.instructions": "Użyj {0}, aby oddać głos!",
    "rtv.panorama-header": "RTV aktywne",
    "rtv.panorama-descripition": "Brakujące głosy: {0}",
+   "rtv.panorama-delay-header": "RTV PRZESZŁO!",
+   "rtv.panorama-delay-text": "GŁOSOWANIE ZA...",
 
   "emv.you-voted": "Zagłosowałeś na {0}",
   "emv.vote-started": "Rozpoczęło się głosowanie na kolejną mapę, wybierz swoją!",

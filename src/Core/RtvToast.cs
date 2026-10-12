@@ -339,7 +339,7 @@ namespace cs2_rockthevote.Core
             return _localizer.Localize(key, args);
         }
 
-        private static string StripChatTags(string text)
+        internal static string StripChatTags(string text)
         {
             text = ChatTagRegex().Replace(text, "");
             text = new string(text.Where(c => c >= ' ').ToArray());

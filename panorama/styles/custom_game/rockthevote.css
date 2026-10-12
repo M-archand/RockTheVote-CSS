@@ -78,13 +78,13 @@
 	border: 1px solid #96d8f2ff;
 }
 
+/* margin-right reserves the right-aligned counter's zone */
 .rtv-vote-row-label
 {
 	color: #a9f5a9ff;
 	font-size: 18px;
 	white-space: nowrap;
 	max-width: 520px;
-	/* Reserves the right-aligned counter's zone */
 	margin-right: 46px;
 }
 
@@ -367,7 +367,7 @@
 	padding: 14px 18px;
 	background-color: #10161de8;
 	border: 1px solid #5db2d1cc;
-	horizontal-align: left
+	horizontal-align: left;
 	vertical-align: top;
 	margin-right: 4px;
 }
@@ -584,6 +584,330 @@
 .rtv-toast-bar.rtv-dur-180 { transition-duration: 180.0s; }
 .rtv-toast-bar.rtv-dur-240 { transition-duration: 240.0s; }
 .rtv-toast-bar.rtv-dur-300 { transition-duration: 300.0s; }
+
+/* ------------------------------------------------------------------ */
+/* Vote start delay banner                                            */
+/* ------------------------------------------------------------------ */
+
+.rtv-delay
+{
+	visibility: collapse;
+	width: 400px;
+	flow-children: down;
+	overflow: clip;
+	background-color: #10161de8;
+	border: 1px solid #5db2d1cc;
+	border-radius: 4px;
+	horizontal-align: right;
+	vertical-align: center;
+	margin-right: 4px;
+}
+
+.rtv-delay.rtv-delay-on
+{
+	visibility: visible;
+}
+
+/* Width steps picked by the server from the longest text line */
+.rtv-delay.rtv-w-240 { width: 240px; }
+.rtv-delay.rtv-w-260 { width: 260px; }
+.rtv-delay.rtv-w-280 { width: 280px; }
+.rtv-delay.rtv-w-300 { width: 300px; }
+.rtv-delay.rtv-w-320 { width: 320px; }
+.rtv-delay.rtv-w-340 { width: 340px; }
+.rtv-delay.rtv-w-360 { width: 360px; }
+.rtv-delay.rtv-w-380 { width: 380px; }
+.rtv-delay.rtv-w-400 { width: 400px; }
+.rtv-delay.rtv-w-420 { width: 420px; }
+.rtv-delay.rtv-w-440 { width: 440px; }
+.rtv-delay.rtv-w-460 { width: 460px; }
+.rtv-delay.rtv-w-480 { width: 480px; }
+.rtv-delay.rtv-w-500 { width: 500px; }
+.rtv-delay.rtv-w-520 { width: 520px; }
+.rtv-delay.rtv-w-540 { width: 540px; }
+.rtv-delay.rtv-w-560 { width: 560px; }
+.rtv-delay.rtv-w-580 { width: 580px; }
+.rtv-delay.rtv-w-600 { width: 600px; }
+.rtv-delay.rtv-w-620 { width: 620px; }
+.rtv-delay.rtv-w-640 { width: 640px; }
+
+/* Text lines then the bubble, left to right. Centered in the fixed-width box so the
+   width-step leftover splits evenly between both sides, and carries the box's inner
+   padding so the bar below can run edge to edge. */
+.rtv-delay-row
+{
+	width: fit-children;
+	horizontal-align: center;
+	flow-children: right;
+	padding-top: 10px;
+	padding-right: 12px;
+	padding-left: 12px;
+	margin-bottom: 10px;
+}
+
+.rtv-delay-lines
+{
+	flow-children: down;
+	vertical-align: center;
+}
+
+.rtv-delay-header
+{
+	color: #a9f5a9ff;
+	font-size: 18px;
+	font-weight: bold;
+	letter-spacing: 1px;
+	margin-bottom: 4px;
+	white-space: nowrap;
+}
+
+.rtv-delay-text
+{
+	color: #f4f7f8ff;
+	font-size: 24px;
+	font-weight: bold;
+	white-space: nowrap;
+}
+
+/* Fixed-size pill so "10s" and "9s" keep the banner the same width */
+.rtv-delay-bubble
+{
+	vertical-align: center;
+	margin-left: 18px;
+	width: 72px;
+	height: 36px;
+	border-radius: 18px;
+	background-color: #d9aa4533;
+	border: 1px solid #d9aa45ff;
+}
+
+.rtv-delay-timer
+{
+	horizontal-align: center;
+	vertical-align: center;
+	color: #d9aa45ff;
+	font-size: 18px;
+	font-weight: bold;
+	white-space: nowrap;
+}
+
+/* Draining bar along the bottom edge */
+.rtv-delay-bar-track
+{
+	width: 100%;
+	height: 5px;
+	background-color: #20313d99;
+}
+
+.rtv-delay-bar
+{
+	width: 100%;
+	height: 100%;
+	background-color: #d9aa45ff;
+	transition-property: width;
+	transition-timing-function: linear;
+	transition-duration: 1.0s;
+}
+
+/* Bar width steps, set by the server once per second */
+.rtv-delay-bar.rtv-pct-100 { width: 100%; }
+.rtv-delay-bar.rtv-pct-98 { width: 98%; }
+.rtv-delay-bar.rtv-pct-96 { width: 96%; }
+.rtv-delay-bar.rtv-pct-94 { width: 94%; }
+.rtv-delay-bar.rtv-pct-92 { width: 92%; }
+.rtv-delay-bar.rtv-pct-90 { width: 90%; }
+.rtv-delay-bar.rtv-pct-88 { width: 88%; }
+.rtv-delay-bar.rtv-pct-86 { width: 86%; }
+.rtv-delay-bar.rtv-pct-84 { width: 84%; }
+.rtv-delay-bar.rtv-pct-82 { width: 82%; }
+.rtv-delay-bar.rtv-pct-80 { width: 80%; }
+.rtv-delay-bar.rtv-pct-78 { width: 78%; }
+.rtv-delay-bar.rtv-pct-76 { width: 76%; }
+.rtv-delay-bar.rtv-pct-74 { width: 74%; }
+.rtv-delay-bar.rtv-pct-72 { width: 72%; }
+.rtv-delay-bar.rtv-pct-70 { width: 70%; }
+.rtv-delay-bar.rtv-pct-68 { width: 68%; }
+.rtv-delay-bar.rtv-pct-66 { width: 66%; }
+.rtv-delay-bar.rtv-pct-64 { width: 64%; }
+.rtv-delay-bar.rtv-pct-62 { width: 62%; }
+.rtv-delay-bar.rtv-pct-60 { width: 60%; }
+.rtv-delay-bar.rtv-pct-58 { width: 58%; }
+.rtv-delay-bar.rtv-pct-56 { width: 56%; }
+.rtv-delay-bar.rtv-pct-54 { width: 54%; }
+.rtv-delay-bar.rtv-pct-52 { width: 52%; }
+.rtv-delay-bar.rtv-pct-50 { width: 50%; }
+.rtv-delay-bar.rtv-pct-48 { width: 48%; }
+.rtv-delay-bar.rtv-pct-46 { width: 46%; }
+.rtv-delay-bar.rtv-pct-44 { width: 44%; }
+.rtv-delay-bar.rtv-pct-42 { width: 42%; }
+.rtv-delay-bar.rtv-pct-40 { width: 40%; }
+.rtv-delay-bar.rtv-pct-38 { width: 38%; }
+.rtv-delay-bar.rtv-pct-36 { width: 36%; }
+.rtv-delay-bar.rtv-pct-34 { width: 34%; }
+.rtv-delay-bar.rtv-pct-32 { width: 32%; }
+.rtv-delay-bar.rtv-pct-30 { width: 30%; }
+.rtv-delay-bar.rtv-pct-28 { width: 28%; }
+.rtv-delay-bar.rtv-pct-26 { width: 26%; }
+.rtv-delay-bar.rtv-pct-24 { width: 24%; }
+.rtv-delay-bar.rtv-pct-22 { width: 22%; }
+.rtv-delay-bar.rtv-pct-20 { width: 20%; }
+.rtv-delay-bar.rtv-pct-18 { width: 18%; }
+.rtv-delay-bar.rtv-pct-16 { width: 16%; }
+.rtv-delay-bar.rtv-pct-14 { width: 14%; }
+.rtv-delay-bar.rtv-pct-12 { width: 12%; }
+.rtv-delay-bar.rtv-pct-10 { width: 10%; }
+.rtv-delay-bar.rtv-pct-8 { width: 8%; }
+.rtv-delay-bar.rtv-pct-6 { width: 6%; }
+.rtv-delay-bar.rtv-pct-4 { width: 4%; }
+.rtv-delay-bar.rtv-pct-2 { width: 2%; }
+.rtv-delay-bar.rtv-pct-0 { width: 0%; }
+
+/* Header size variants (RtvMapVoteHeaderSize) */
+.rtv-delay-header.rtv-header-compact { font-size: 16px; margin-bottom: 2px; }
+.rtv-delay-header.rtv-header-large { font-size: 20px; margin-bottom: 4px; }
+.rtv-delay-header.rtv-header-xlarge { font-size: 22px; margin-bottom: 6px; }
+
+/* Body size variants (RtvSize): text, timer, bubble */
+.rtv-delay-text.rtv-text-compact { font-size: 18px; }
+.rtv-delay-text.rtv-text-large { font-size: 28px; }
+.rtv-delay-text.rtv-text-xlarge { font-size: 32px; }
+
+.rtv-delay-timer.rtv-text-compact { font-size: 15px; }
+.rtv-delay-timer.rtv-text-large { font-size: 21px; }
+.rtv-delay-timer.rtv-text-xlarge { font-size: 24px; }
+
+.rtv-delay-bubble.rtv-text-compact { width: 60px; height: 30px; border-radius: 15px; }
+.rtv-delay-bubble.rtv-text-large { width: 84px; height: 42px; border-radius: 21px; }
+.rtv-delay-bubble.rtv-text-xlarge { width: 96px; height: 48px; border-radius: 24px; }
+
+/* Accent color palette (RtvMapVoteHeaderColor): timer, bar, bubble */
+.rtv-delay-timer.rtv-color-white { color: #f4f7f8ff; }
+.rtv-delay-timer.rtv-color-green { color: #a9f5a9ff; }
+.rtv-delay-timer.rtv-color-cyan { color: #7fd8f2ff; }
+.rtv-delay-timer.rtv-color-yellow { color: #f2e27fff; }
+.rtv-delay-timer.rtv-color-orange { color: #f2b06aff; }
+.rtv-delay-timer.rtv-color-red { color: #f28a8aff; }
+.rtv-delay-timer.rtv-color-magenta { color: #e39af0ff; }
+.rtv-delay-timer.rtv-color-blue { color: #8fa8f5ff; }
+
+.rtv-delay-bar.rtv-color-white { background-color: #f4f7f8ff; }
+.rtv-delay-bar.rtv-color-green { background-color: #a9f5a9ff; }
+.rtv-delay-bar.rtv-color-cyan { background-color: #7fd8f2ff; }
+.rtv-delay-bar.rtv-color-yellow { background-color: #f2e27fff; }
+.rtv-delay-bar.rtv-color-orange { background-color: #f2b06aff; }
+.rtv-delay-bar.rtv-color-red { background-color: #f28a8aff; }
+.rtv-delay-bar.rtv-color-magenta { background-color: #e39af0ff; }
+.rtv-delay-bar.rtv-color-blue { background-color: #8fa8f5ff; }
+
+.rtv-delay-bubble.rtv-color-white { background-color: #f4f7f833; border: 1px solid #f4f7f8ff; }
+.rtv-delay-bubble.rtv-color-green { background-color: #a9f5a933; border: 1px solid #a9f5a9ff; }
+.rtv-delay-bubble.rtv-color-cyan { background-color: #7fd8f233; border: 1px solid #7fd8f2ff; }
+.rtv-delay-bubble.rtv-color-yellow { background-color: #f2e27f33; border: 1px solid #f2e27fff; }
+.rtv-delay-bubble.rtv-color-orange { background-color: #f2b06a33; border: 1px solid #f2b06aff; }
+.rtv-delay-bubble.rtv-color-red { background-color: #f28a8a33; border: 1px solid #f28a8aff; }
+.rtv-delay-bubble.rtv-color-magenta { background-color: #e39af033; border: 1px solid #e39af0ff; }
+.rtv-delay-bubble.rtv-color-blue { background-color: #8fa8f533; border: 1px solid #8fa8f5ff; }
+
+/* Body text color palette (RtvColor) */
+.rtv-delay-text.rtv-color-white { color: #f4f7f8ff; }
+.rtv-delay-text.rtv-color-green { color: #a9f5a9ff; }
+.rtv-delay-text.rtv-color-cyan { color: #7fd8f2ff; }
+.rtv-delay-text.rtv-color-yellow { color: #f2e27fff; }
+.rtv-delay-text.rtv-color-orange { color: #f2b06aff; }
+.rtv-delay-text.rtv-color-red { color: #f28a8aff; }
+.rtv-delay-text.rtv-color-magenta { color: #e39af0ff; }
+.rtv-delay-text.rtv-color-blue { color: #8fa8f5ff; }
+
+/* Screen-position variants (same offsets as the toast) */
+.rtv-delay.rtv-pos-center-top
+{
+	horizontal-align: center;
+	vertical-align: top;
+	margin-top: 4px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	margin-left: 0px;
+}
+
+.rtv-delay.rtv-pos-center-middle
+{
+	horizontal-align: center;
+	vertical-align: center;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	margin-left: 0px;
+}
+
+.rtv-delay.rtv-pos-center-bottom
+{
+	horizontal-align: center;
+	vertical-align: bottom;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 4px;
+	margin-left: 0px;
+}
+
+.rtv-delay.rtv-pos-top-left
+{
+	horizontal-align: left;
+	vertical-align: top;
+	margin-top: 4px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	margin-left: 4px;
+}
+
+.rtv-delay.rtv-pos-top-right
+{
+	horizontal-align: right;
+	vertical-align: top;
+	margin-top: 4px;
+	margin-right: 4px;
+	margin-bottom: 0px;
+	margin-left: 0px;
+}
+
+.rtv-delay.rtv-pos-bottom-left
+{
+	horizontal-align: left;
+	vertical-align: bottom;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 4px;
+	margin-left: 4px;
+}
+
+.rtv-delay.rtv-pos-bottom-right
+{
+	horizontal-align: right;
+	vertical-align: bottom;
+	margin-top: 0px;
+	margin-right: 4px;
+	margin-bottom: 4px;
+	margin-left: 0px;
+}
+
+.rtv-delay.rtv-pos-center-left
+{
+	horizontal-align: left;
+	vertical-align: center;
+	margin-top: 0px;
+	margin-right: 0px;
+	margin-bottom: 0px;
+	margin-left: 4px;
+}
+
+.rtv-delay.rtv-pos-center-right
+{
+	horizontal-align: right;
+	vertical-align: center;
+	margin-top: 0px;
+	margin-right: 4px;
+	margin-bottom: 0px;
+	margin-left: 0px;
+}
 
 /* Invisible layout-revision marker (see the comment in the xml) */
 .rtv-version

@@ -67,6 +67,8 @@
     "rtv.instructions": "Usa {0} para emitir tu voto!",
     "rtv.panorama-header": "RTV activado",
     "rtv.panorama-descripition": "Votos faltantes: {0}",
+    "rtv.panorama-delay-header": "¡RTV APROBADO!",
+    "rtv.panorama-delay-text": "LA VOTACIÓN EMPIEZA EN...",
 
     "emv.you-voted": "Votaste por {0}",
     "emv.vote-started": "¡Ya empezó la votación para el próximo mapa, haz tu elección!",

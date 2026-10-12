@@ -67,6 +67,8 @@
   "rtv.instructions": "使用 {0} 來投票！",
   "rtv.panorama-header": "RTV 已啟動",
   "rtv.panorama-descripition": "還需票數：{0}",
+  "rtv.panorama-delay-header": "RTV 已通過！",
+  "rtv.panorama-delay-text": "投票即將開始...",
 
   "emv.you-voted": "你投給了 {green}{0}",
   "emv.vote-started": "下一張地圖投票已開始，快來選擇！",

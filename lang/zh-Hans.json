@@ -67,6 +67,8 @@
   "rtv.instructions": "使用 {0} 进行投票！",
   "rtv.panorama-header": "RTV 已激活",
   "rtv.panorama-descripition": "还需票数：{0}",
+  "rtv.panorama-delay-header": "RTV 已通过！",
+  "rtv.panorama-delay-text": "投票即将开始...",
 
   "emv.you-voted": "您投票支持 {0}",
   "emv.vote-started": "下一张地图的投票已经开始，请做出您的选择！",

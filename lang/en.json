@@ -67,6 +67,8 @@
   "rtv.instructions": "Use {0} to cast your vote.",
   "rtv.panorama-header": "RTV Active (change map)",
   "rtv.panorama-descripition": "Votes needed: {0}",
+  "rtv.panorama-delay-header": "RTV PASSED!",
+  "rtv.panorama-delay-text": "MAP VOTE IN...",
 
   "emv.you-voted": "You voted for {green}{0}",
   "emv.vote-started": "Voting for the next map has started, make your pick!    ",

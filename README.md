@@ -104,13 +104,14 @@ General purpose map voting plugin for CS2, built on CounterStrikeSharp.
 
 ### Panorama HUD addon
 
-Only needed if you set `EndOfMapVote.MenuType` to `panorama` or enable `Rtv.EnablePanoramaToast`.
+Only needed if you set `EndOfMapVote.MenuType` to `panorama`, enable `Rtv.EnablePanoramaToast`, or set `Rtv.DelayNotificationType` to `panorama`.
 
 The clickable panel is a `custom_hud_layout` Panorama panel. Its sources live in this repo under [panorama/](panorama/) (`layout/custom_game/rockthevote.xml` and `styles/custom_game/rockthevote.css`). The compiled `.vxml_c` / `.vcss_c` files must be shipped to clients in a workshop addon, and `PanoramaMenu.AddonName` must point at the layout path inside that addon.
 
 - Clicks arrive through CounterStrikeSharp's built-in `CustomHudLayout` API, no gamedata file needed.
 - You can also set `PanoramaMenu.EnableClickVoting` to `false`. The panel then becomes display-only and players vote by typing `!1` .. `!N` in chat.
 - Position, size, and color variants are baked into the addon stylesheet, so keep the addon in sync with the plugin version.
+- `scripts/panorama-watch.sh` compiles the sources with [PanoramaCompiler](https://github.com/nicedayzhu/PanoramaCompiler) (no Workshop Tools needed), writes `panorama-rtv.zip` (compiled `.vxml_c` / `.vcss_c` in the addon's `panorama/...` folder layout, ready to drop into the addon), and installs the files into your local CS2 client as loose overrides for testing. Run it once with `--once`, or leave it running to rebuild on every save. The client must run with `-insecure` to use loose overrides, and must be fully restarted to pick up a change. `PANORAMA_INSTALL=0` skips the client install. If the client keeps using the workshop addon's copy instead of the loose override, run with `PANORAMA_DEV_NAME=rockthevote_dev` to also install a renamed copy that no addon ships, and point the test server's `PanoramaMenu.AddonName` at `panorama/layout/custom_game/rockthevote_dev.xml`. `scripts/panorama-css-lint.py` runs first and rejects the two comment mistakes that make Panorama drop the whole stylesheet.
 
 ## Commands
 
@@ -164,7 +165,8 @@ Things to know:
 | `AlwaysActiveReminder` | `true` | Periodically remind chat that an rtv is active and how many votes are still needed |
 | `ReminderInterval` | `180` | Seconds between reminders |
 | `RtvVoteDuration` | `60` | Length of the rtv vote in seconds (when `AlwaysActive` is `false`) |
-| `VoteStartDelay` | `0` | Seconds between a passed rtv and the start of the resulting map vote, announced in chat. `0` = the map vote starts instantly |
+| `VoteStartDelay` | `0` | Seconds between a passed rtv and the start of the resulting map vote, announced via `DelayNotificationType`. `0` = the map vote starts instantly |
+| `DelayNotificationType` | `"chat"` | How the `VoteStartDelay` notice is shown. `chat` = chat message. `center` = center text, sent once. `html` = center HTML text, sent once. `panorama` = banner on the Panorama HUD ("RTV PASSED! / VOTE STARTING IN..." with a timer bubble and a draining bar), shown for the whole delay. Needs the [Panorama HUD addon](#panorama-hud-addon) at layout revision 3 or newer, uses the `Rtv*` keys in `PanoramaMenu`, and falls back to chat if the banner can't be shown |
 | `MapVoteDuration` | `60` | Length of the resulting map vote in seconds |
 | `CooldownDuration` | `180` | Seconds before another `!rtv` can be started after one fails |
 | `MapStartDelay` | `180` | Seconds after map start before `!rtv` can be used |
@@ -256,11 +258,11 @@ Shared settings for everything drawn on the Panorama custom HUD: the End of Map 
 | `MapVoteHeaderColor` | `"orange"` | `default` (gold), `white`, `green`, `cyan`, `yellow`, `orange`, `red`, `magenta`, `blue` |
 | `MapVoteRowSize` | `"large"` | `compact`, `normal`, `large`, `extralarge` |
 | `MapVoteRowColor` | `"green"` | `white`, `green`, `cyan`, `yellow`, `orange`, `red`, `magenta`, `blue` |
-| `RtvPosition` | `"CenterRight"` | Where the RTV toast appears. Same options as `MapVoteMenuPosition` |
-| `RtvMapVoteHeaderSize` | `"large"` | Toast header size, same options as `MapVoteHeaderSize` |
-| `RtvMapVoteHeaderColor` | `"orange"` | Toast header color, same options as `MapVoteHeaderColor` |
-| `RtvColor` | `"white"` | Toast body text color, same options as `MapVoteHeaderColor` |
-| `RtvSize` | `"normal"` | Toast body text size, same options as `MapVoteHeaderSize` |
+| `RtvPosition` | `"CenterRight"` | Where the RTV toast and the vote start delay banner appear. Same options as `MapVoteMenuPosition` |
+| `RtvMapVoteHeaderSize` | `"large"` | Header size of the toast and the delay banner, same options as `MapVoteHeaderSize` |
+| `RtvMapVoteHeaderColor` | `"orange"` | Toast header color; on the delay banner it tints the timer bubble and bar (the banner's header text stays green), same options as `MapVoteHeaderColor` |
+| `RtvColor` | `"white"` | Body text color of the toast and the delay banner, same options as `MapVoteHeaderColor` |
+| `RtvSize` | `"normal"` | Body text size of the toast and the delay banner (also scales its timer bubble), same options as `MapVoteHeaderSize` |
 
 ### General
 
@@ -308,6 +310,7 @@ Shared settings for everything drawn on the Panorama custom HUD: the End of Map 
     "ReminderInterval": 180,
     "RtvVoteDuration": 60,
     "VoteStartDelay": 0,
+    "DelayNotificationType": "chat",
     "MapVoteDuration": 60,
     "CooldownDuration": 180,
     "MapStartDelay": 180,

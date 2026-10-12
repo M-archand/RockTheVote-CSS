@@ -67,6 +67,8 @@
   "rtv.instructions": "Izmanto {0}, lai nobalsotu!",
   "rtv.panorama-header": "RTV aktīvs",
   "rtv.panorama-descripition": "Vēl vajadzīgas balsis: {0}",
+  "rtv.panorama-delay-header": "RTV PIEŅEMTS!",
+  "rtv.panorama-delay-text": "BALSOŠANA SĀKSIES PĒC...",
 
   "emv.you-voted": "Jūs balsojāt par {0}",
   "emv.vote-started": "Balsošana par nākamo karti ir sākusies, izdari savu izvēli!",

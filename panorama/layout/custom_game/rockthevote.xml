@@ -4,7 +4,7 @@
 	</styles>
 	<Panel class="rtv-vote-root" hittest="false">
 		<!-- Version marker: invisible in-game, visible in a decompile so a mounted addon's revision can be identified. Bump when editing. -->
-		<Label class="rtv-version" text="rockthevote revision 2" hittest="false" />
+		<Label class="rtv-version" text="rockthevote revision 6" hittest="false" />
 		<Panel id="rtv_vote_dialog" class="rtv-vote-dialog" hittest="false">
 			<Label id="rtv_header" class="rtv-vote-kicker" text="{s:rtv_header}" hittest="false" />
 			<Panel class="rtv-vote-options" hittest="false">
@@ -36,6 +36,21 @@
 			</Panel>
 			<Panel id="rtv_toast_bar_track" class="rtv-toast-bar-track" hittest="false">
 				<Panel id="rtv_toast_bar" class="rtv-toast-bar" hittest="false" />
+			</Panel>
+		</Panel>
+		<!-- Vote start delay banner -->
+		<Panel id="rtv_delay" class="rtv-delay" hittest="false">
+			<Panel class="rtv-delay-row" hittest="false">
+				<Panel id="rtv_delay_lines" class="rtv-delay-lines" hittest="false">
+					<Label id="rtv_delay_header" class="rtv-delay-header" text="{s:rtv_delay_header}" hittest="false" />
+					<Label id="rtv_delay_text" class="rtv-delay-text" text="{s:rtv_delay_text}" hittest="false" />
+				</Panel>
+				<Panel id="rtv_delay_bubble" class="rtv-delay-bubble" hittest="false">
+					<Label id="rtv_delay_timer" class="rtv-delay-timer" text="{s:rtv_delay_timer}" hittest="false" />
+				</Panel>
+			</Panel>
+			<Panel class="rtv-delay-bar-track" hittest="false">
+				<Panel id="rtv_delay_bar" class="rtv-delay-bar" hittest="false" />
 			</Panel>
 		</Panel>
 	</Panel>

@@ -32,6 +32,7 @@ namespace cs2_rockthevote
         private readonly AFKManager _afk;
         private readonly PanoramaVote _panoramaVote;
         private readonly Core.RtvToast _rtvToast;
+        private readonly Core.VoteStartBanner _voteStartBanner;
         private RtvConfig _config = new();
         private GeneralConfig _generalConfig = new();
         private AsyncVoteManager? _voteManager;
@@ -48,7 +49,7 @@ namespace cs2_rockthevote
         public int TimeLeft => (int)Math.Max(0, (_rtvEndTime - DateTime.UtcNow).TotalSeconds);
 
 
-        public RockTheVoteCommand(GameRules gameRules, EndMapVoteManager endmapVoteManager, StringLocalizer localizer, PluginState pluginState, AFKManager afkManager, PanoramaVote panoramaVote, Core.RtvToast rtvToast, ILogger<RockTheVoteCommand> logger)
+        public RockTheVoteCommand(GameRules gameRules, EndMapVoteManager endmapVoteManager, StringLocalizer localizer, PluginState pluginState, AFKManager afkManager, PanoramaVote panoramaVote, Core.RtvToast rtvToast, Core.VoteStartBanner voteStartBanner, ILogger<RockTheVoteCommand> logger)
         {
             _localizer = localizer;
             _gameRules = gameRules;
@@ -57,6 +58,7 @@ namespace cs2_rockthevote
             _afk = afkManager;
             _panoramaVote = panoramaVote;
             _rtvToast = rtvToast;
+            _voteStartBanner = voteStartBanner;
             _logger = logger;
         }
 
@@ -209,6 +211,7 @@ namespace cs2_rockthevote
             {
                 _mapVoteDelayTimer = null;
                 _pluginState.RtvMapVotePending = false;
+                _voteStartBanner.Hide();
 
                 try
                 {
@@ -221,10 +224,38 @@ namespace cs2_rockthevote
             }, TimerFlags.STOP_ON_MAPCHANGE);
         }
 
-        private string VotesReachedMessage() =>
-            _config.VoteStartDelay > 0
-                ? _localizer.LocalizeWithPrefix("rtv.votes-reached-delay", _config.VoteStartDelay)
-                : _localizer.LocalizeWithPrefix("rtv.votes-reached");
+        private void AnnounceVotesReached()
+        {
+            int delay = _config.VoteStartDelay;
+            if (delay <= 0)
+            {
+                Server.PrintToChatAll(_localizer.LocalizeWithPrefix("rtv.votes-reached"));
+                return;
+            }
+
+            string type = _config.DelayNotificationType;
+
+            // Falls through to chat when the banner can't be shown
+            if (ConfigValue.Is(type, "panorama") && _voteStartBanner.Show(delay))
+                return;
+
+            if (ConfigValue.IsAny(type, "center", "html"))
+            {
+                bool html = ConfigValue.Is(type, "html");
+                string text = Core.RtvToast.StripChatTags(_localizer.Localize("rtv.votes-reached-delay", delay));
+
+                foreach (var player in ServerManager.ValidPlayers())
+                {
+                    if (html)
+                        player.PrintToCenterHtml(text);
+                    else
+                        player.PrintToCenter(text);
+                }
+                return;
+            }
+
+            Server.PrintToChatAll(_localizer.LocalizeWithPrefix("rtv.votes-reached-delay", delay));
+        }
 
         private void StopMapVoteDelayTimer()
         {
@@ -388,7 +419,7 @@ namespace cs2_rockthevote
                                 StopReminderTimer();
                                 _rtvToast.Hide();
                                 StartMapVote();
-                                Server.PrintToChatAll(VotesReachedMessage());
+                                AnnounceVotesReached();
                             }
                             else
                                 _rtvToast.ShowOrUpdate(Math.Max(requiredYesVotes - result.VoteCount, 0), CurrentRemainingVotes);
@@ -405,7 +436,7 @@ namespace cs2_rockthevote
                                 StopReminderTimer();
                                 _rtvToast.Hide();
                                 StartMapVote();
-                                Server.PrintToChatAll(VotesReachedMessage());
+                                AnnounceVotesReached();
                             }
                             else
                                 _rtvToast.ShowOrUpdate(Math.Max(requiredYesVotes - result.VoteCount, 0), CurrentRemainingVotes);
@@ -425,7 +456,7 @@ namespace cs2_rockthevote
                             _rtvToast.Hide();
                             StartMapVote();
                             Server.PrintToChatAll($"{_localizer.LocalizeWithPrefix("rtv.rocked-the-vote", player.PlayerName)} {_localizer.Localize("general.votes-needed", result.VoteCount, requiredYesVotes)}");
-                            Server.PrintToChatAll(VotesReachedMessage());
+                            AnnounceVotesReached();
                             break;
                     }
                 }
@@ -447,7 +478,7 @@ namespace cs2_rockthevote
 
             if (info.yes_votes >= requiredYesVotes)
             {
-                Server.PrintToChatAll(VotesReachedMessage());
+                AnnounceVotesReached();
                 StartMapVote();
 
                 return true;
@@ -630,7 +661,7 @@ namespace cs2_rockthevote
             StopReminderTimer();
             _rtvToast.Hide();
             StartMapVote();
-            Server.PrintToChatAll(VotesReachedMessage());
+            AnnounceVotesReached();
         }
 
         private void SendReminder()

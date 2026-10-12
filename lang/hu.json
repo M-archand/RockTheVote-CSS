@@ -67,6 +67,8 @@
   "rtv.instructions": "Használd a {0} parancsot a szavazáshoz!",
   "rtv.panorama-header": "RTV aktív",
   "rtv.panorama-descripition": "Még szükséges szavazatok: {0}",
+  "rtv.panorama-delay-header": "RTV SIKERES!",
+  "rtv.panorama-delay-text": "A SZAVAZÁS INDUL...",
 
   "emv.you-voted": "A következőre szavaztál: {0}",
   "emv.vote-started": "Elkezdődött a szavazás a következő térképre, válassz!",

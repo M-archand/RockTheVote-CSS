@@ -67,6 +67,8 @@
   "rtv.instructions": "{0} komutuyla oy ver!",
   "rtv.panorama-header": "RTV aktif",
   "rtv.panorama-descripition": "Kalan oy: {0}",
+  "rtv.panorama-delay-header": "RTV GEÇTİ!",
+  "rtv.panorama-delay-text": "OYLAMA BAŞLIYOR...",
 
   "emv.you-voted": "{0} için oy verdiniz",
   "emv.vote-started": "Bir sonraki harita için oylama başladı, seçiminizi yapın!",
