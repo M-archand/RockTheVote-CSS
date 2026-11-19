@@ -158,13 +158,13 @@ namespace cs2_rockthevote
         public bool IncludeAFK { get; set; } = true;
         public int AFKCheckInterval { get; set; } = 30;
         // true = load the map list from the MySQL table in the Database section instead of maplist.txt
-        public bool EnabledDatabase { get; set; } = false;
+        public bool EnableDatabase { get; set; } = false;
         public bool EnableMapValidation { get; set; } = false;
         public string SteamApiKey { get; set; } = "";
         public string DiscordWebhook { get; set; } = "";
     }
 
-    // MySQL connection used when General.EnabledDatabase is true
+    // MySQL connection used when General.EnableDatabase is true
     public class DatabaseConfig
     {
         public string Host { get; set; } = "localhost";
@@ -175,6 +175,8 @@ namespace cs2_rockthevote
         // None, Preferred, Required, VerifyCA or VerifyFull
         public string SslMode { get; set; } = "Preferred";
         public string TableName { get; set; } = "map_list";
+        // Blank = every tier. "1-3", "1,2,3" or "1-3,5" = only maps whose Tier is listed
+        public string EnabledTiers { get; set; } = "";
     }
 
     public class Config : BasePluginConfig, IBasePluginConfig

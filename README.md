@@ -30,7 +30,7 @@ General purpose map voting plugin for CS2, built on CounterStrikeSharp.
 - **Hints & sounds.** Optional center-screen hint and configurable sound when a vote starts.
 
 ### Map Management
-- **Custom map list.** Plain-text `maplist.txt` with support for workshop maps and custom display names like `surf_beginner (T1, Staged)`, or a MySQL table managed outside the server (`General.EnabledDatabase`). See [Map List](#map-list).
+- **Custom map list.** Plain-text `maplist.txt` with support for workshop maps and custom display names like `surf_beginner (T1, Staged)`, or a MySQL table managed outside the server (`General.EnableDatabase`). See [Map List](#map-list).
 - **Map cooldown persistence.** Recently played maps stay on cooldown across restarts (stored in `mapcooldown.txt`).
 - **Map list validator.** Detects workshop maps that are no longer available, removes them from the in-memory list (so they can't be nominated, voted for, or switched to), and reports to the error log or a Discord webhook. Optional Steam Web API key enables batch validation (100 IDs per request).
 - **Map Chooser.** `!mapmenu` opens a menu of all maps and changes to the selection immediately (flag restricted).
@@ -282,14 +282,14 @@ Shared settings for everything drawn on the Panorama custom HUD: the End of Map 
 | `IncludeSpectator` | `true` | Spectators count toward `!rtv` |
 | `IncludeAFK` | `true` | AFK players count toward `!rtv` |
 | `AFKCheckInterval` | `30` | Seconds between AFK checks (compares player positions, also runs when a vote starts) |
-| `EnabledDatabase` | `false` | `true` = load the map list from the MySQL table configured in [Database](#database) instead of `maplist.txt`. See [MySQL table](#mysql-table) |
+| `EnableDatabase` | `false` | `true` = load the map list from the MySQL table configured in [Database](#database) instead of `maplist.txt`. See [MySQL table](#mysql-table) |
 | `EnableMapValidation` | `false` | Check the map list for workshop maps that are no longer on the workshop |
 | `SteamApiKey` | `""` | Blank = 1 request/second HTML checks. Set a [Steam Web API key](https://steamcommunity.com/dev/apikey) to batch validation (100 IDs per call) |
 | `DiscordWebhook` | `""` | Blank = no alert. Full `https://discord.com/api/webhooks/...` URL to be notified of missing workshop maps |
 
 ### Database
 
-Only used when `General.EnabledDatabase` is `true`. MySQL / MariaDB only.
+Only used when `General.EnableDatabase` is `true`. MySQL / MariaDB only.
 
 | Key | Default | Description |
 | --- | --- | --- |
@@ -300,6 +300,7 @@ Only used when `General.EnabledDatabase` is `true`. MySQL / MariaDB only.
 | `Database` | `"rockthevote"` | Database (schema) that holds the table |
 | `SslMode` | `"Preferred"` | TLS for the connection: `None`, `Preferred` (TLS when the server offers it), `Required`, `VerifyCA` or `VerifyFull`. An unknown value falls back to `Preferred` |
 | `TableName` | `"map_list"` | Table holding the maps. Letters, digits and underscores only |
+| `EnabledTiers` | `""` | Blank = every tier. `"1-3"`, `"1,2,3"` or `"1-3,5"` = only load maps whose `Tier` is listed (0 to 255). See [Tier filter](#tier-filter) |
 
 MySQL 8 accounts on the default `caching_sha2_password` authentication need TLS, which `Preferred` uses whenever the server offers it. `None` only suits a server with TLS turned off and an account on `mysql_native_password`, or MariaDB.
 
@@ -420,7 +421,7 @@ MySQL 8 accounts on the default `caching_sha2_password` authentication need TLS,
     "IncludeSpectator": true,
     "IncludeAFK": true,
     "AFKCheckInterval": 30,
-    "EnabledDatabase": false,
+    "EnableDatabase": false,
     "EnableMapValidation": false,
     "SteamApiKey": "",
     "DiscordWebhook": ""
@@ -432,7 +433,8 @@ MySQL 8 accounts on the default `caching_sha2_password` authentication need TLS,
     "Password": "",
     "Database": "rockthevote",
     "SslMode": "Preferred",
-    "TableName": "map_list"
+    "TableName": "map_list",
+    "EnabledTiers": ""
   }
 }
 ```
@@ -441,7 +443,7 @@ MySQL 8 accounts on the default `caching_sha2_password` authentication need TLS,
 
 ## Map List
 
-The plugin reads its maps from `maplist.txt` by default, or from a MySQL table when `General.EnabledDatabase` is `true`. Reload mid-game with `!reloadmaps`.
+The plugin reads its maps from `maplist.txt` by default, or from a MySQL table when `General.EnableDatabase` is `true`. Reload mid-game with `!reloadmaps`.
 
 ### maplist.txt
 
@@ -462,7 +464,7 @@ surf_nyx (Tier 1, Linear):3129698096
 
 ### MySQL table
 
-Set `General.EnabledDatabase` to `true` and fill in the [Database](#database) section. The table is created on first load when the user has `CREATE` rights, otherwise create it yourself:
+Set `General.EnableDatabase` to `true` and fill in the [Database](#database) section. The table is created on first load when the user has `CREATE` rights, otherwise create it yourself:
 
 ```sql
 CREATE TABLE IF NOT EXISTS `map_list` (
@@ -470,6 +472,7 @@ CREATE TABLE IF NOT EXISTS `map_list` (
   `DisplayName` VARCHAR(255) NULL,
   `WorkshopID` BIGINT(20) UNSIGNED NULL,
   `Active` TINYINT NOT NULL DEFAULT 1,
+  `Tier` TINYINT UNSIGNED NULL DEFAULT NULL,
   PRIMARY KEY (`MapName`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 ```
@@ -480,15 +483,28 @@ CREATE TABLE IF NOT EXISTS `map_list` (
 | `DisplayName` | Name shown to players in menus and chat, e.g. `surf_beginner (T1, Staged)`. `NULL` or empty = `MapName` |
 | `WorkshopID` | Steam workshop item id from the workshop URL, e.g. `3070321829`. `NULL` or `0` = default game map, changed with `changelevel` |
 | `Active` | `1` = in the rotation, `0` = disabled and ignored entirely |
+| `Tier` | Optional difficulty tier for surf, bhop and kz maps. `NULL` = no tier. Only read when `Database.EnabledTiers` is set, see [Tier filter](#tier-filter) |
 
 ```sql
-INSERT INTO `map_list` (`MapName`, `DisplayName`, `WorkshopID`, `Active`) VALUES
-  ('de_mirage', NULL, NULL, 1),
-  ('surf_beginner', 'surf_beginner (T1, Staged)', 3070321829, 1),
-  ('surf_nyx', 'surf_nyx (Tier 1, Linear)', 3129698096, 0);
+INSERT INTO `map_list` (`MapName`, `DisplayName`, `WorkshopID`, `Active`, `Tier`) VALUES
+  ('de_mirage', NULL, NULL, 1, NULL),
+  ('surf_beginner', 'surf_beginner (T1, Staged)', 3070321829, 1, 1),
+  ('surf_nyx', 'surf_nyx (Tier 1, Linear)', 3129698096, 0, 1);
 ```
 
-Only rows with `Active = 1` are loaded, sorted by `MapName`. `DisplayName` has to be unique; a duplicate falls back to its `MapName` as the label (with a warning in the log). The query runs off the main thread on every map start and on `!reloadmaps`, and the previous list stays in use until it finishes. If the query fails, the error is logged and the previous list stays in use. When nothing has been loaded yet, the plugin falls back to `maplist.txt` if that file exists; otherwise the map list is empty until the next successful load. `MySqlConnector.dll` ships in the release zip next to `RockTheVote.dll` and has to stay there.
+Only rows with `Active = 1` are loaded, sorted by `MapName`. `DisplayName` has to be unique; a duplicate falls back to its `MapName` as the label (with a warning in the log). The query runs off the main thread on every map start and on `!reloadmaps`, and the previous list stays in use until it finishes. If the query fails or returns no maps, the reason is logged and the previous list stays in use. When nothing has been loaded yet, the plugin falls back to `maplist.txt` if that file exists; otherwise the map list is empty until the next successful load. `MySqlConnector.dll` ships in the release zip next to `RockTheVote.dll` and has to stay there.
+
+#### Tier filter
+
+Servers that do not use tiers leave `Tier` at `NULL` and `Database.EnabledTiers` blank; nothing else changes for them. Set `EnabledTiers` to a list (`"1,2,3"`), a range (`"1-3"`) or both (`"1-3,5"`) and only active maps with one of those tiers are loaded. Several servers can then share one table, for example `"1-2"` on a beginner server and `"3-8"` on a harder one.
+
+- Maps without a tier are left out while the filter is set.
+- A value that cannot be read counts as a failed load instead of loading every tier.
+- A table created without the column needs it added once:
+
+```sql
+ALTER TABLE `map_list` ADD COLUMN `Tier` TINYINT UNSIGNED NULL DEFAULT NULL;
+```
 
 The map cooldown is written to `mapcooldown.txt` in the same folder so it survives restarts.
 

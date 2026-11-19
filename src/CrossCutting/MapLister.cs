@@ -10,7 +10,7 @@ namespace cs2_rockthevote
         private readonly MapListDatabase _database;
         public Map[] Maps { get; private set; } = Array.Empty<Map>();
         public bool MapsLoaded { get; private set; } = false;
-        // true when the last load could not read its configured source, even if an older list or maplist.txt is still in use
+        // true when the last load failed or the database returned no maps, even if an older list or maplist.txt is still in use
         public bool LastLoadFailed { get; private set; } = false;
         // true while a database load is in flight; the file path is synchronous
         public bool IsLoading { get; private set; } = false;
@@ -51,7 +51,7 @@ namespace cs2_rockthevote
             // Any load still in flight is superseded by this one
             int generation = ++_loadGeneration;
 
-            if (_generalConfig.EnabledDatabase)
+            if (_generalConfig.EnableDatabase)
             {
                 LoadMapsFromDatabase(generation);
                 return;
@@ -95,7 +95,7 @@ namespace cs2_rockthevote
             EventMapsLoaded += handler;
         }
 
-        // Keeps the current list until the query finishes, and when it fails, so a reload never leaves the plugin without maps
+        // Keeps the current list until the query finishes, and when it fails or returns nothing, so a reload never leaves the plugin without maps
         private void LoadMapsFromDatabase(int generation)
         {
             IsLoading = true;
@@ -121,19 +121,18 @@ namespace cs2_rockthevote
 
                     try
                     {
-                        if (maps is not null)
+                        string problem = maps is null ? "Database load failed" : "The database returned no maps";
+
+                        if (maps is { Length: > 0 })
                         {
                             LastLoadFailed = false;
                             SetMaps(maps, loaded: true);
-                            if (maps.Length == 0)
-                                _logger.LogWarning("[RTV.MapLister] The database returned no active maps. Set Active = 1 on the maps you want in the rotation.");
-                            else
-                                _debugLogger.LogInformation("[RTV.MapLister] Loaded {MapCount} maps from the database.", maps.Length);
+                            _debugLogger.LogInformation("[RTV.MapLister] Loaded {MapCount} maps from the database.", maps.Length);
                         }
                         else if (MapsLoaded && Maps.Length > 0)
                         {
                             LastLoadFailed = true;
-                            _logger.LogError("[RTV.MapLister] Database load failed, keeping the {MapCount} previously loaded maps.", Maps.Length);
+                            _logger.LogError("[RTV.MapLister] {Problem}, keeping the {MapCount} previously loaded maps.", problem, Maps.Length);
                         }
                         else
                         {
@@ -142,13 +141,13 @@ namespace cs2_rockthevote
                             string mapsFile = MapsFilePath();
                             if (File.Exists(mapsFile))
                             {
-                                _logger.LogWarning("[RTV.MapLister] Database load failed, falling back to {MapListPath}.", mapsFile);
+                                _logger.LogWarning("[RTV.MapLister] {Problem}, falling back to {MapListPath}.", problem, mapsFile);
                                 LoadMapsFromFile();
                             }
                             else
                             {
-                                _logger.LogError("[RTV.MapLister] Database load failed and no {MapListPath} exists to fall back to. The map list is empty.", mapsFile);
-                                Server.PrintToConsole("[RTV.MapLister] Database load failed and no maplist.txt exists to fall back to. The map list is empty.");
+                                _logger.LogError("[RTV.MapLister] {Problem} and no {MapListPath} exists to fall back to. The map list is empty.", problem, mapsFile);
+                                Server.PrintToConsole($"[RTV.MapLister] {problem} and no maplist.txt exists to fall back to. The map list is empty.");
                             }
                         }
 

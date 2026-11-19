@@ -51,6 +51,14 @@ namespace cs2_rockthevote
                 return null;
             }
 
+            if (!TryParseTiers(_config.EnabledTiers, out byte[] tiers))
+            {
+                _logger.LogError("[RTV.MapDatabase] Invalid Database.EnabledTiers \"{EnabledTiers}\". Use tiers from 0 to 255 as a list (\"1,2,3\"), a range (\"1-3\") or both (\"1-3,5\").", _config.EnabledTiers);
+                return null;
+            }
+
+            string tierFilter = tiers.Length == 0 ? "" : $" AND `Tier` IN ({string.Join(",", tiers)})";
+
             try
             {
                 await using DbConnection connection = CreateConnection();
@@ -58,7 +66,7 @@ namespace cs2_rockthevote
                 await EnsureTableAsync(connection, table).ConfigureAwait(false);
 
                 await using DbCommand command = connection.CreateCommand();
-                command.CommandText = $"SELECT `MapName`, `DisplayName`, `WorkshopID` FROM `{table}` WHERE `Active` = 1 ORDER BY `MapName`";
+                command.CommandText = $"SELECT `MapName`, `DisplayName`, `WorkshopID` FROM `{table}` WHERE `Active` = 1{tierFilter} ORDER BY `MapName`";
 
                 var maps = new List<Map>();
                 // Labels must be unique: votes, nominations and the map change resolve maps by label
@@ -92,6 +100,11 @@ namespace cs2_rockthevote
                     maps.Add(new Map(label, workshopId, mapName));
                 }
 
+                if (maps.Count == 0 && tiers.Length > 0)
+                    _logger.LogWarning("[RTV.MapDatabase] No active maps in {Table} match Database.EnabledTiers \"{EnabledTiers}\". Maps without a Tier are left out while it is set.", table, _config.EnabledTiers);
+                else if (maps.Count == 0)
+                    _logger.LogWarning("[RTV.MapDatabase] No active maps in {Table}. Set Active = 1 on the maps you want in the rotation.", table);
+
                 _debugLogger.LogInformation("[RTV.MapDatabase] Query returned {MapCount} active map(s) from {Host}:{Port}/{Database}.{Table}.",
                     maps.Count, _config.Host, _config.Port, _config.Database, table);
                 return [.. maps];
@@ -102,6 +115,30 @@ namespace cs2_rockthevote
                     _config.Host, _config.Port, _config.Database, table, ex.Message);
                 return null;
             }
+        }
+
+        // Blank = no filter. Anything else has to parse completely, so a typo never widens the map pool
+        private static bool TryParseTiers(string? value, out byte[] tiers)
+        {
+            tiers = [];
+            if (string.IsNullOrWhiteSpace(value))
+                return true;
+
+            var parsed = new SortedSet<byte>();
+            foreach (string token in value.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+            {
+                string[] bounds = token.Split('-', StringSplitOptions.TrimEntries);
+                if (bounds.Length > 2
+                    || !byte.TryParse(bounds[0], NumberStyles.None, CultureInfo.InvariantCulture, out byte first)
+                    || !byte.TryParse(bounds[^1], NumberStyles.None, CultureInfo.InvariantCulture, out byte last))
+                    return false;
+
+                for (int tier = Math.Min(first, last); tier <= Math.Max(first, last); tier++)
+                    parsed.Add((byte)tier);
+            }
+
+            tiers = [.. parsed];
+            return tiers.Length > 0;
         }
 
         // MapName goes into changelevel console commands, so nothing that could start a second command
@@ -134,6 +171,7 @@ namespace cs2_rockthevote
     `DisplayName` VARCHAR(255) NULL,
     `WorkshopID` BIGINT(20) UNSIGNED NULL,
     `Active` TINYINT NOT NULL DEFAULT 1,
+    `Tier` TINYINT UNSIGNED NULL DEFAULT NULL,
     PRIMARY KEY (`MapName`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
                 await command.ExecuteNonQueryAsync().ConfigureAwait(false);
