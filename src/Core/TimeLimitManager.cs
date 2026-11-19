@@ -6,8 +6,8 @@ namespace cs2_rockthevote.Core
     public class TimeLimitManager(GameRules gameRules) : IPluginDependency<Plugin, Config>
     {
         private GameRules _gameRules = gameRules;
-        private ConVar? _timeLimit;
-        private decimal TimeLimitValue => (decimal)(_timeLimit?.GetPrimitiveValue<float>() ?? 0F) * 60M;
+        private ConVar<float>? _timeLimit;
+        private decimal TimeLimitValue => (decimal)(_timeLimit?.Value ?? 0F) * 60M;
         public bool UnlimitedTime => TimeLimitValue <= 0;
 
         public decimal TimePlayed
@@ -35,12 +35,12 @@ namespace cs2_rockthevote.Core
                 return TimeLimitValue - TimePlayed;
             }
 
-            set => _timeLimit!.SetValue((float)value);
+            set => _timeLimit!.Value = (float)value;
         }
 
         void LoadCvar()
         {
-            _timeLimit = ConVar.Find("mp_timelimit");
+            _timeLimit = ConVar<float>.Find("mp_timelimit");
         }
 
         public void OnMapStart(string map)

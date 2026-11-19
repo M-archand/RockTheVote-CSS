@@ -383,7 +383,7 @@ namespace cs2_rockthevote
         private bool DeferMapChangeUntilVoteEnds()
         {
             return !_generalConfig.ForceMapChange &&
-                   ConVar.Find("mp_ignore_round_win_conditions")?.GetPrimitiveValue<bool>() == true;
+                   ConVar<bool>.Find("mp_ignore_round_win_conditions")?.Value == true;
         }
 
         public void ScheduleNextVote()
@@ -1090,7 +1090,7 @@ namespace cs2_rockthevote
             _revoteMenuOpen.Clear();
 
             bool ignoreRoundWinConditions =
-                ConVar.Find("mp_ignore_round_win_conditions")?.GetPrimitiveValue<bool>() == true;
+                ConVar<bool>.Find("mp_ignore_round_win_conditions")?.Value == true;
 
             MapChangeTrigger trigger;
             if (isRtv)

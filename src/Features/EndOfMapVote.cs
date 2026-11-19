@@ -40,7 +40,7 @@ namespace cs2_rockthevote
         bool DeferMapChangeUntilVoteEnds()
         {
             return !_generalConfig.ForceMapChange &&
-                   ConVar.Find("mp_ignore_round_win_conditions")?.GetPrimitiveValue<bool>() == true;
+                   ConVar<bool>.Find("mp_ignore_round_win_conditions")?.Value == true;
         }
 
         public void StartVote()

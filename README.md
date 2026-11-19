@@ -91,7 +91,7 @@ General purpose map voting plugin for CS2, built on CounterStrikeSharp.
 
 | Dependency | Version |
 | --- | --- |
-| [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp) | v374 or newer (the Panorama menu uses the `CustomHudLayout` API added in 1.0.374) |
+| [CounterStrikeSharp](https://github.com/roflmuffin/CounterStrikeSharp) | v379 or newer (uses the type-safe `ConVar<T>` API added in 1.0.379; the Panorama menu uses the `CustomHudLayout` API added in 1.0.374) |
 | [CS2MenuManager](https://github.com/schwarper/CS2MenuManager) | v42 or newer |
 
 ## Installation

@@ -215,9 +215,12 @@ namespace cs2_rockthevote
             {
                 _pluginState.MapChangeScheduled = false;
 
-                var timeLimitCvar = ConVar.Find("mp_timelimit");
-                _preChangeTimeLimit ??= timeLimitCvar?.GetPrimitiveValue<float>();
-                timeLimitCvar?.SetValue(0f);
+                var timeLimitCvar = ConVar<float>.Find("mp_timelimit");
+                if (timeLimitCvar != null)
+                {
+                    _preChangeTimeLimit ??= timeLimitCvar.Value;
+                    timeLimitCvar.Value = 0f;
+                }
 
                 _debugLogger.LogInformation(
                     "[RTV.MapChange] Evaluating command path. map={Map} mapId={MapId} previousMap={PreviousMap}",
@@ -283,7 +286,8 @@ namespace cs2_rockthevote
         {
             if (_preChangeTimeLimit is { } value)
             {
-                ConVar.Find("mp_timelimit")?.SetValue(value);
+                if (ConVar<float>.Find("mp_timelimit") is { } timeLimitCvar)
+                    timeLimitCvar.Value = value;
                 _preChangeTimeLimit = null;
             }
         }

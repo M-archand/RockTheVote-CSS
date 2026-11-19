@@ -13,8 +13,8 @@ namespace cs2_rockthevote
         private readonly ILogger<GameRules> _logger;
         CCSGameRules? _gameRules = null;
         private Plugin? _plugin;
-        private ConVar? _roundTimeCvar;
-        private ConVar? _timeLimitCvar;
+        private ConVar<float>? _roundTimeCvar;
+        private ConVar<float>? _timeLimitCvar;
         private float _fallbackRoundStartTime;
         private int _fallbackRoundTimeSeconds;
         private ILogger _debugLogger = NullLogger.Instance;
@@ -35,13 +35,13 @@ namespace cs2_rockthevote
 
         private void LoadRoundTimeCvar()
         {
-            _roundTimeCvar = ConVar.Find("mp_roundtime");
-            _fallbackRoundTimeSeconds = (int)MathF.Round((_roundTimeCvar?.GetPrimitiveValue<float>() ?? 0f) * 60f);
+            _roundTimeCvar = ConVar<float>.Find("mp_roundtime");
+            _fallbackRoundTimeSeconds = (int)MathF.Round((_roundTimeCvar?.Value ?? 0f) * 60f);
         }
 
         private void LoadTimeLimitCvar()
         {
-            _timeLimitCvar = ConVar.Find("mp_timelimit");
+            _timeLimitCvar = ConVar<float>.Find("mp_timelimit");
         }
 
         private CCSGameRules? GetValidGameRules(bool refresh = false)
@@ -191,7 +191,7 @@ namespace cs2_rockthevote
                 if (_timeLimitCvar == null)
                     LoadTimeLimitCvar();
 
-                float timelimitMinutes = _timeLimitCvar?.GetPrimitiveValue<float>() ?? 0f;
+                float timelimitMinutes = _timeLimitCvar?.Value ?? 0f;
                 int targetRoundTime;
 
                 if (timelimitMinutes > 0f)
@@ -202,7 +202,7 @@ namespace cs2_rockthevote
                 {
                     if (_roundTimeCvar == null)
                         LoadRoundTimeCvar();
-                    float roundTimeMinutes = _roundTimeCvar?.GetPrimitiveValue<float>() ?? 0f;
+                    float roundTimeMinutes = _roundTimeCvar?.Value ?? 0f;
                     if (roundTimeMinutes <= 0f)
                     {
                         _debugLogger.LogWarning("[RTV.GameRules] SyncRoundTimeToTimeLimit skipped, neither mp_timelimit nor mp_roundtime is positive.");

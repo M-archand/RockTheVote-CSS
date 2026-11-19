@@ -115,9 +115,9 @@ namespace cs2_rockthevote
             {
                 try
                 {
-                    var cvar = ConVar.Find(name);
+                    var cvar = ConVar<bool>.Find(name);
                     if (cvar != null)
-                        _voteConVarBaseline[name] = cvar.GetPrimitiveValue<bool>();
+                        _voteConVarBaseline[name] = cvar.Value;
                 }
                 catch (Exception ex)
                 {
