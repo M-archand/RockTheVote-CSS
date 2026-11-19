@@ -169,7 +169,7 @@ namespace cs2_rockthevote
         {
             RegisterStartupCommand("css_reloadrtv", "Reloads the RTV config.", ReloadCommand);
             RegisterStartupCommand("css_rtv", "Votes to rock the vote", OnRTV);
-            RegisterStartupCommand("css_reloadmaps", "Reloads the map list from maplist.txt.", OnReloadMapsCommand);
+            RegisterStartupCommand("css_reloadmaps", "Reloads the map list from maplist.txt or the database.", OnReloadMapsCommand);
             RegisterStartupCommand("css_nom", "Nominate a map to appear in the vote.", OnNominateCommand);
             RegisterStartupCommand("css_nominate", "Nominate a map to appear in the vote.", OnNominateCommand);
             RegisterStartupCommand("css_voteextend", "Extends time for the current map", OnVoteExtendRoundTimeCommand);

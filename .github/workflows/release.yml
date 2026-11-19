@@ -51,7 +51,7 @@ jobs:
           fi
 
           # CSS install layout: archive root holds RockTheVote-v{version}/
-          #   addons/counterstrikesharp/plugins/RockTheVote/ -> plugin dll + deps + lang + maplist example
+          #   addons/counterstrikesharp/plugins/RockTheVote/ -> plugin dll + MySqlConnector + deps + lang + maplist example
           # Note: CS2MenuManager is a required separate dependency and is NOT bundled here.
           rm -rf package
           ROOT="package/${FOLDER}"
@@ -61,6 +61,7 @@ jobs:
           # Plugin assembly + runtime deps manifest (pdb excluded)
           cp "${PLUGIN_OUT}/RockTheVote.dll" "${PLUGIN_DIR}/"
           cp "${PLUGIN_OUT}/RockTheVote.deps.json" "${PLUGIN_DIR}/"
+          cp "${PLUGIN_OUT}/MySqlConnector.dll" "${PLUGIN_DIR}/"
 
           # Resources
           cp -r "${PLUGIN_OUT}/lang" "${PLUGIN_DIR}/"

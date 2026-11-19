@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="CounterStrikeSharp.API" Version="1.0.374" />
     <PackageReference Include="CS2MenuManager" Version="1.0.42" />
+    <PackageReference Include="MySqlConnector" Version="2.6.2" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,5 +24,11 @@
     <None Update="maplist.example.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup> 
+  </ItemGroup>
+
+  <!-- Class libraries do not copy package assemblies; MySqlConnector.dll must ship next to RockTheVote.dll -->
+  <Target Name="CopyMySqlConnector" AfterTargets="Build">
+    <Copy SourceFiles="@(ReferencePath)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true"
+          Condition="'%(ReferencePath.NuGetPackageId)' == 'MySqlConnector'" />
+  </Target>
 </Project>

@@ -109,7 +109,7 @@ namespace cs2_rockthevote
                 var menu = MenuManager.MenuByType(menuType, title, _plugin!);
 
                 foreach (var m in _mapLister.Maps!
-                            .Where(x => !MapNameHelper.GetBaseName(x.Name).Equals(Server.MapName, StringComparison.OrdinalIgnoreCase)))
+                            .Where(x => !x.BaseName.Equals(Server.MapName, StringComparison.OrdinalIgnoreCase)))
                 {
                     bool isCooldown = _mapCooldown.IsMapInCooldown(m.Name);
                     string label = isCooldown ? $"{ChatColors.Grey}{m.Name}" : m.Name;
@@ -181,7 +181,7 @@ namespace cs2_rockthevote
             }
 
             // Can't nominate a map on cooldown
-            if (_mapCooldown.IsMapInCooldown(baseName))
+            if (_mapCooldown.IsMapInCooldown(mapName))
             {
                 player.PrintToChat(_localizer.LocalizeWithPrefix("general.validation.map-played-recently"));
                 return;

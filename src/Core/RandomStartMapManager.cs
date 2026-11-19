@@ -37,9 +37,18 @@ namespace cs2_rockthevote
             if (!_generalConfig.RandomStartMap || !_firstMapStart)
                 return;
 
+            // The map list may still be loading from the database on the first map start
+            _mapLister.WhenLoaded(() => PickRandomMap(currentMap));
+        }
+
+        private void PickRandomMap(string currentMap)
+        {
+            if (!_firstMapStart)
+                return;
+
             // Build a list of maps
             var candidates = _mapLister.Maps?
-                .Where(m => !string.Equals(m.Name, currentMap, StringComparison.OrdinalIgnoreCase))
+                .Where(m => !string.Equals(m.BaseName, currentMap, StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
             if (candidates == null || candidates.Count == 0)

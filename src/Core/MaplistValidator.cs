@@ -25,7 +25,7 @@ namespace cs2_rockthevote
         public void OnMapStart(string map)
         {
             if (!validated && _config.EnableMapValidation)
-                _ = ValidateAllMapsAsync();
+                _mapLister.WhenLoaded(() => _ = ValidateAllMapsAsync());
             validated = true;
         }
 

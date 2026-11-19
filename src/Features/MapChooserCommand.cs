@@ -86,7 +86,7 @@ namespace cs2_rockthevote
                     if (!string.IsNullOrEmpty(map.Id) && ulong.TryParse(map.Id, out var mapId))
                         Server.ExecuteCommand($"host_workshop_map {mapId}");
                     else
-                        Server.ExecuteCommand($"changelevel {map.Name}");
+                        Server.ExecuteCommand($"changelevel {map.BaseName}");
                 });
             }
 

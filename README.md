@@ -30,7 +30,7 @@ General purpose map voting plugin for CS2, built on CounterStrikeSharp.
 - **Hints & sounds.** Optional center-screen hint and configurable sound when a vote starts.
 
 ### Map Management
-- **Custom map list.** Plain-text `maplist.txt` with support for workshop maps and custom display names like `surf_beginner (T1, Staged)`.
+- **Custom map list.** Plain-text `maplist.txt` with support for workshop maps and custom display names like `surf_beginner (T1, Staged)`, or a MySQL table managed outside the server (`General.EnabledDatabase`). See [Map List](#map-list).
 - **Map cooldown persistence.** Recently played maps stay on cooldown across restarts (stored in `mapcooldown.txt`).
 - **Map list validator.** Detects workshop maps that are no longer available, removes them from the in-memory list (so they can't be nominated, voted for, or switched to), and reports to the error log or a Discord webhook. Optional Steam Web API key enables batch validation (100 IDs per request).
 - **Map Chooser.** `!mapmenu` opens a menu of all maps and changes to the selection immediately (flag restricted).
@@ -98,7 +98,7 @@ General purpose map voting plugin for CS2, built on CounterStrikeSharp.
 
 1. Download the latest release from the [releases page](https://github.com/M-archand/cs2-rockthevote/releases).
 2. Extract the zip into `addons/counterstrikesharp/plugins`.
-3. Edit `maplist.example.txt` with your maps and rename it to `maplist.txt`. See [Map List](#map-list).
+3. Edit `maplist.example.txt` with your maps and rename it to `maplist.txt`, or point the plugin at a MySQL table instead. See [Map List](#map-list).
 4. Load the plugin once. The config is created at `addons/counterstrikesharp/configs/plugins/RockTheVote/RockTheVote.json`.
 5. Edit the config, then run `!reloadrtv`, reload the plugin, or restart the server. Changing the map is not enough.
 
@@ -130,14 +130,14 @@ The `css_` prefix is optional in chat, so `!rtv`, `/rtv`, and `css_rtv` in conso
 | `!cooldown` | `!cd` (configurable) | Print the maps currently on cooldown to console, most recent first (10s per-player cooldown) | |
 | `!nextmap` | | Print the next map to chat | |
 | `!timeleft` | | Print the time left on the current map | |
-| `!reloadmaps` | | Rebuild the map list from `maplist.txt` | `General.AdminPermission` |
+| `!reloadmaps` | | Rebuild the map list from `maplist.txt` or the database | `General.AdminPermission` |
 | `!reloadrtv` | | Reload the plugin config | `General.AdminPermission` |
 
 **Permission format.** Every `Permission` key accepts a comma separated list of CSS flags, e.g. `"@css/vip,@css/nominate"`. Any listed flag grants access. An empty string means anyone can use the command.
 
 ## Configuration
 
-Config file: `addons/counterstrikesharp/configs/plugins/RockTheVote/RockTheVote.json` (`ConfigVersion` 26).
+Config file: `addons/counterstrikesharp/configs/plugins/RockTheVote/RockTheVote.json` (`ConfigVersion` 27).
 
 Things to know:
 - String values such as `MenuType`, `CountdownType`, `HintType`, positions, and colors are matched case-insensitively.
@@ -282,16 +282,33 @@ Shared settings for everything drawn on the Panorama custom HUD: the End of Map 
 | `IncludeSpectator` | `true` | Spectators count toward `!rtv` |
 | `IncludeAFK` | `true` | AFK players count toward `!rtv` |
 | `AFKCheckInterval` | `30` | Seconds between AFK checks (compares player positions, also runs when a vote starts) |
-| `EnableMapValidation` | `false` | Check `maplist.txt` for workshop maps that are no longer on the workshop |
+| `EnabledDatabase` | `false` | `true` = load the map list from the MySQL table configured in [Database](#database) instead of `maplist.txt`. See [MySQL table](#mysql-table) |
+| `EnableMapValidation` | `false` | Check the map list for workshop maps that are no longer on the workshop |
 | `SteamApiKey` | `""` | Blank = 1 request/second HTML checks. Set a [Steam Web API key](https://steamcommunity.com/dev/apikey) to batch validation (100 IDs per call) |
 | `DiscordWebhook` | `""` | Blank = no alert. Full `https://discord.com/api/webhooks/...` URL to be notified of missing workshop maps |
+
+### Database
+
+Only used when `General.EnabledDatabase` is `true`. MySQL / MariaDB only.
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `Host` | `"localhost"` | MySQL server hostname or IP |
+| `Port` | `3306` | MySQL server port |
+| `User` | `"root"` | Database user. `SELECT` on the table is enough; `CREATE` lets the plugin create the table for you |
+| `Password` | `""` | Database password |
+| `Database` | `"rockthevote"` | Database (schema) that holds the table |
+| `SslMode` | `"Preferred"` | TLS for the connection: `None`, `Preferred` (TLS when the server offers it), `Required`, `VerifyCA` or `VerifyFull`. An unknown value falls back to `Preferred` |
+| `TableName` | `"map_list"` | Table holding the maps. Letters, digits and underscores only |
+
+MySQL 8 accounts on the default `caching_sha2_password` authentication need TLS, which `Preferred` uses whenever the server offers it. `None` only suits a server with TLS turned off and an account on `mysql_native_password`, or MariaDB.
 
 <details>
 <summary><b>Full default config</b></summary>
 
 ```json
 {
-  "ConfigVersion": 26,
+  "ConfigVersion": 27,
   "Rtv": {
     "Enabled": true,
     "EnabledInWarmup": false,
@@ -403,9 +420,19 @@ Shared settings for everything drawn on the Panorama custom HUD: the End of Map 
     "IncludeSpectator": true,
     "IncludeAFK": true,
     "AFKCheckInterval": 30,
+    "EnabledDatabase": false,
     "EnableMapValidation": false,
     "SteamApiKey": "",
     "DiscordWebhook": ""
+  },
+  "Database": {
+    "Host": "localhost",
+    "Port": 3306,
+    "User": "root",
+    "Password": "",
+    "Database": "rockthevote",
+    "SslMode": "Preferred",
+    "TableName": "map_list"
   }
 }
 ```
@@ -414,7 +441,11 @@ Shared settings for everything drawn on the Panorama custom HUD: the End of Map 
 
 ## Map List
 
-Maps live in `addons/counterstrikesharp/plugins/RockTheVote/maplist.txt`, one per line. Lines starting with `//` are ignored. Reload mid-game with `!reloadmaps`.
+The plugin reads its maps from `maplist.txt` by default, or from a MySQL table when `General.EnabledDatabase` is `true`. Reload mid-game with `!reloadmaps`.
+
+### maplist.txt
+
+Maps live in `addons/counterstrikesharp/plugins/RockTheVote/maplist.txt`, one per line. Lines starting with `//` are ignored.
 
 ```
 // Default game maps
@@ -428,6 +459,36 @@ surf_rookie:3082548297
 // Display names can include extra text
 surf_nyx (Tier 1, Linear):3129698096
 ```
+
+### MySQL table
+
+Set `General.EnabledDatabase` to `true` and fill in the [Database](#database) section. The table is created on first load when the user has `CREATE` rights, otherwise create it yourself:
+
+```sql
+CREATE TABLE IF NOT EXISTS `map_list` (
+  `MapName` VARCHAR(128) NOT NULL,
+  `DisplayName` VARCHAR(255) NULL,
+  `WorkshopID` BIGINT(20) UNSIGNED NULL,
+  `Active` TINYINT NOT NULL DEFAULT 1,
+  PRIMARY KEY (`MapName`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+```
+
+| Column | Meaning |
+| --- | --- |
+| `MapName` | Map file name as uploaded to the workshop or shipped with the game, e.g. `surf_beginner`. Used for `changelevel` and for current-map and cooldown checks. Letters, digits, `_`, `-`, `.` and `/` only; any other row is skipped with a warning in the log |
+| `DisplayName` | Name shown to players in menus and chat, e.g. `surf_beginner (T1, Staged)`. `NULL` or empty = `MapName` |
+| `WorkshopID` | Steam workshop item id from the workshop URL, e.g. `3070321829`. `NULL` or `0` = default game map, changed with `changelevel` |
+| `Active` | `1` = in the rotation, `0` = disabled and ignored entirely |
+
+```sql
+INSERT INTO `map_list` (`MapName`, `DisplayName`, `WorkshopID`, `Active`) VALUES
+  ('de_mirage', NULL, NULL, 1),
+  ('surf_beginner', 'surf_beginner (T1, Staged)', 3070321829, 1),
+  ('surf_nyx', 'surf_nyx (Tier 1, Linear)', 3129698096, 0);
+```
+
+Only rows with `Active = 1` are loaded, sorted by `MapName`. `DisplayName` has to be unique; a duplicate falls back to its `MapName` as the label (with a warning in the log). The query runs off the main thread on every map start and on `!reloadmaps`, and the previous list stays in use until it finishes. If the query fails, the error is logged and the previous list stays in use. When nothing has been loaded yet, the plugin falls back to `maplist.txt` if that file exists; otherwise the map list is empty until the next successful load. `MySqlConnector.dll` ships in the release zip next to `RockTheVote.dll` and has to stay there.
 
 The map cooldown is written to `mapcooldown.txt` in the same folder so it survives restarts.
 

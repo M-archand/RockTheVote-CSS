@@ -157,14 +157,29 @@ namespace cs2_rockthevote
         public bool IncludeSpectator { get; set; } = true;
         public bool IncludeAFK { get; set; } = true;
         public int AFKCheckInterval { get; set; } = 30;
+        // true = load the map list from the MySQL table in the Database section instead of maplist.txt
+        public bool EnabledDatabase { get; set; } = false;
         public bool EnableMapValidation { get; set; } = false;
         public string SteamApiKey { get; set; } = "";
         public string DiscordWebhook { get; set; } = "";
     }
 
+    // MySQL connection used when General.EnabledDatabase is true
+    public class DatabaseConfig
+    {
+        public string Host { get; set; } = "localhost";
+        public int Port { get; set; } = 3306;
+        public string User { get; set; } = "root";
+        public string Password { get; set; } = "";
+        public string Database { get; set; } = "rockthevote";
+        // None, Preferred, Required, VerifyCA or VerifyFull
+        public string SslMode { get; set; } = "Preferred";
+        public string TableName { get; set; } = "map_list";
+    }
+
     public class Config : BasePluginConfig, IBasePluginConfig
     {
-        public const int CurrentVersion = 26;
+        public const int CurrentVersion = 27;
 
         [JsonPropertyName("ConfigVersion")]
         public override int Version { get; set; } = CurrentVersion;
@@ -176,5 +191,6 @@ namespace cs2_rockthevote
         public MapChooserConfig MapChooser { get; set; } = new();
         public PanoramaMenuConfig PanoramaMenu { get; set; } = new();
         public GeneralConfig General { get; set; } = new();
+        public DatabaseConfig Database { get; set; } = new();
     }
 }

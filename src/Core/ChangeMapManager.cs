@@ -226,7 +226,7 @@ namespace cs2_rockthevote
                     mapBefore
                 );
 
-                bool mapNameIsValid = Server.IsMapValid(map.Name);
+                bool mapNameIsValid = Server.IsMapValid(map.BaseName);
 
                 _debugLogger.LogInformation(
                     "[RTV.MapChange] IsMapValid evaluated. map={Map} result={IsValid}",
@@ -251,7 +251,7 @@ namespace cs2_rockthevote
                         map.Name,
                         mapBefore
                     );
-                    Server.ExecuteCommand($"changelevel {map.Name}");
+                    Server.ExecuteCommand($"changelevel {map.BaseName}");
                 }
                 else
                 {
@@ -260,7 +260,7 @@ namespace cs2_rockthevote
                         map.Name,
                         mapBefore
                     );
-                    Server.ExecuteCommand($"ds_workshop_changelevel {map.Name}");
+                    Server.ExecuteCommand($"ds_workshop_changelevel {map.BaseName}");
                 }
 
                 StartMapChangeVerifyTimer(map, mapBefore);
@@ -308,14 +308,14 @@ namespace cs2_rockthevote
 
                         var candidates = _maps
                             .Where(m =>
-                                !string.Equals(m.Name, current, StringComparison.OrdinalIgnoreCase) &&
+                                !string.Equals(m.BaseName, current, StringComparison.OrdinalIgnoreCase) &&
                                 !string.Equals(m.Name, map.Name, StringComparison.OrdinalIgnoreCase))
                             .ToList();
 
                         if (candidates.Count == 0)
                         {
                             candidates = _maps
-                                .Where(m => !string.Equals(m.Name, current, StringComparison.OrdinalIgnoreCase))
+                                .Where(m => !string.Equals(m.BaseName, current, StringComparison.OrdinalIgnoreCase))
                                 .ToList();
                         }
 
@@ -352,15 +352,15 @@ namespace cs2_rockthevote
                             );
                             Server.ExecuteCommand($"host_workshop_map {fallback.Id}");
                         }
-                        else if (Server.IsMapValid(fallback.Name))
+                        else if (Server.IsMapValid(fallback.BaseName))
                         {
                             _debugLogger.LogInformation("[RTV.MapChange] Executing fallback changelevel. map={Map}", fallback.Name);
-                            Server.ExecuteCommand($"changelevel {fallback.Name}");
+                            Server.ExecuteCommand($"changelevel {fallback.BaseName}");
                         }
                         else
                         {
                             _debugLogger.LogInformation("[RTV.MapChange] Executing fallback ds_workshop_changelevel. map={Map}", fallback.Name);
-                            Server.ExecuteCommand($"ds_workshop_changelevel {fallback.Name}");
+                            Server.ExecuteCommand($"ds_workshop_changelevel {fallback.BaseName}");
                         }
                     }
                 }

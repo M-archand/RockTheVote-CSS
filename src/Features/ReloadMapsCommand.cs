@@ -1,3 +1,4 @@
+using CounterStrikeSharp.API;
 using CounterStrikeSharp.API.Core;
 using CounterStrikeSharp.API.Modules.Commands;
 using CounterStrikeSharp.API.Modules.Utils;
@@ -31,6 +32,10 @@ namespace cs2_rockthevote
             _generalConfig = config.General;
         }
 
+        private string ResultMessage() => _mapLister.LastLoadFailed
+            ? $"[RTV] {ChatColors.Red}Map list reload failed. Check the server console/logs for details."
+            : $"[RTV] {ChatColors.Lime}Map list reloaded successfully.";
+
         public void CommandHandler(CCSPlayerController? player, CommandInfo command)
         {
             if (player != null && !PermissionUtility.HasAny(player, _generalConfig.AdminPermissions))
@@ -42,13 +47,31 @@ namespace cs2_rockthevote
             try
             {
                 _mapLister.LoadMaps();
-                if (!_mapLister.MapsLoaded)
+
+                if (!_mapLister.IsLoading)
                 {
-                    command.ReplyToCommand($"[RTV] {ChatColors.Red}Map list reload failed. Check server console/logs for the expected maplist path.");
+                    command.ReplyToCommand(ResultMessage());
                     return;
                 }
 
-                command.ReplyToCommand($"[RTV] {ChatColors.Lime}Map list reloaded successfully.");
+                // Database loads finish on a later frame, so CommandInfo can't be used for the reply
+                command.ReplyToCommand($"[RTV] {ChatColors.Lime}Reloading the map list from the database...");
+                int? slot = player?.Slot;
+                ulong steamId = player?.SteamID ?? 0;
+                _mapLister.WhenLoaded(() =>
+                {
+                    string message = ResultMessage();
+                    if (slot is null)
+                    {
+                        Server.PrintToConsole(message);
+                        return;
+                    }
+
+                    // The slot may belong to someone else by now
+                    var live = Utilities.GetPlayerFromSlot(slot.Value);
+                    if (live != null && live.IsValid && live.SteamID == steamId)
+                        live.PrintToChat(message);
+                });
             }
             catch (FileNotFoundException ex)
             {

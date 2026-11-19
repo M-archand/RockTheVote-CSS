@@ -124,7 +124,7 @@ namespace cs2_rockthevote
 
                 var menu = MenuManager.MenuByType(menuType, title, _plugin!);
 
-                foreach (var m in _mapLister.Maps!.Where(x => x.Name != Server.MapName))
+                foreach (var m in _mapLister.Maps!.Where(x => !x.BaseName.Equals(Server.MapName, StringComparison.OrdinalIgnoreCase)))
                 {
                     bool isCooldown = _mapCooldown.IsMapInCooldown(m.Name);
                     string label = isCooldown ? $"{ChatColors.Grey}{m.Name}" : m.Name;
@@ -163,7 +163,7 @@ namespace cs2_rockthevote
 
         public void AddVote(CCSPlayerController player, string map)
         {
-            if (map == Server.MapName)
+            if (MapNameHelper.GetBaseName(map).Equals(Server.MapName, StringComparison.OrdinalIgnoreCase))
             {
                 player!.PrintToChat(_localizer.LocalizeWithPrefix("general.validation.current-map"));
                 return;
