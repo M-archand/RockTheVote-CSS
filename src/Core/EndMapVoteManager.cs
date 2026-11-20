@@ -877,7 +877,7 @@ namespace cs2_rockthevote
             KillNextVoteTimer();
             if (_pluginState.EofVoteHappening)
                 return;
-
+            KillTimer();
             VotedPlayers.Clear();
             _playerVotes.Clear();
             _revoteMenuOpen.Clear();
@@ -1072,7 +1072,7 @@ namespace cs2_rockthevote
 
         public void EndVote(bool isRtv)
         {
-            if (_pluginState.Unloaded)
+            if (_pluginState.Unloaded || Timer is null)
                 return;
 
             CloseAllActiveMenus();
