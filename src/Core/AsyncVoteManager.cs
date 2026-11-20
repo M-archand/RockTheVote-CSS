@@ -11,9 +11,11 @@
         public int RequiredVotes => _voteValidator.RequiredVotes(ServerManager.ValidPlayerCount());
         public bool VotesAlreadyReached { get; private set; } = false;
         public IReadOnlyCollection<int> Voters => votes.AsReadOnly();
+        public int VotePercentage { get; }
 
         public AsyncVoteManager(int votePercentage)
         {
+            VotePercentage = votePercentage;
             _voteValidator = new AsyncVoteValidator(votePercentage / 100f);
         }
 

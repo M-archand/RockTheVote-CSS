@@ -136,6 +136,7 @@ namespace cs2_rockthevote
             try
             {
                 Config.Reload();
+                OnConfigParsed(Config);
                 command.ReplyToCommand($"[RTV] {ChatColors.Lime}Configuration reloaded successfully!");
             }
             catch (Exception ex)

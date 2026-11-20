@@ -86,8 +86,8 @@ namespace cs2_rockthevote
                 _logger.LogWarning("[RTV.RtvCommand] Rtv.EnablePanorama and Rtv.AlwaysActive are both enabled in your config but they are incompatible; forcing AlwaysActive=false so the panorama vote is used.");
                 _config.AlwaysActive = false;
             }
-
-            _voteManager = new AsyncVoteManager(_config.VotePercentage);
+            if (_voteManager?.VotePercentage != _config.VotePercentage) // keep live votes across !reloadrtv
+                _voteManager = new AsyncVoteManager(_config.VotePercentage);
 
             if (!uint.TryParse(_config.SoundPath, out _) && !SoundEventHelper.IsFullVolume(_config.SoundVolume))
             {
