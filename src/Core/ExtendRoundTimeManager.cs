@@ -254,5 +254,23 @@ namespace cs2_rockthevote
                 return false;
             }
         }
+
+        public void PlayerDisconnected(int slot)
+        {
+            RemoveVote(slot);
+
+            if (!_pluginState.ExtendTimeVoteHappening || Timer is null)
+                return;
+
+            _canVote = Math.Min(_canVote, ServerManager.ValidPlayers().Count(p => p.Slot != slot));
+            Server.NextFrame(() =>
+            {
+                if (_pluginState.Unloaded || !_pluginState.ExtendTimeVoteHappening || Timer is null)
+                    return;
+
+                if (Votes.Count > 0 && Votes.Count >= _canVote)
+                    ExtendTimeVote();
+            });
+        }
     }
 }

@@ -638,7 +638,7 @@ namespace cs2_rockthevote
 
             int slot = player.Slot;
             _revoteMenuOpen.Remove(slot);
-
+            ShrinkVotePool(slot);
             if (!_playerVotes.TryGetValue(slot, out var votedMap))
                 return;
 
@@ -1244,6 +1244,19 @@ namespace cs2_rockthevote
             }
 
             _pluginState.EofVoteHappening = false;
+        }
+
+        private void ShrinkVotePool(int leavingSlot)
+        {
+            if (!_pluginState.EofVoteHappening || Timer is null)
+                return;
+
+            _canVote = Math.Min(_canVote, ServerManager.ValidPlayers().Count(p => p.Slot != leavingSlot));
+            Server.NextFrame(() =>
+            {
+                if (_pluginState.EofVoteHappening && !_endMapConfig.EnableRevote && Votes.Values.Sum() >= _canVote)
+                    EndVote(_activeVoteIsRtv);
+            });
         }
     }
 }

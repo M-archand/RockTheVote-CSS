@@ -268,7 +268,7 @@ namespace cs2_rockthevote
                 return;
 
             if (!_voteExtendConfig.EnablePanorama)
-                _extendRoundTimeManager?.RemoveVote(player.Slot);
+                _extendRoundTimeManager?.PlayerDisconnected(player.Slot);
             else
                 _panoramaVote.RemovePlayerFromVote(player.Slot);
         }
