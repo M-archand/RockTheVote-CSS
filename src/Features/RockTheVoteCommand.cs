@@ -167,14 +167,14 @@ namespace cs2_rockthevote
             _rtvTimer = _plugin!.AddTimer(_config.RtvVoteDuration, () =>
             {
                 _pluginState.RtvVoteHappening = false;
-
+                _rtvTimer = null;
                 if (!_voteManager!.VotesAlreadyReached)
                 {
+                    _voteManager = new AsyncVoteManager(_config.VotePercentage);
                     _rtvToast.Hide();
                     Server.PrintToChatAll(_localizer.LocalizeWithPrefix("rtv.time-up"));
                     ActivateCooldown();
                 }
-
             }, TimerFlags.STOP_ON_MAPCHANGE);
         }
 
