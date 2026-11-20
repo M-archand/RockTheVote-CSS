@@ -193,13 +193,22 @@ namespace cs2_rockthevote
             if (!m_bIsVoteInProgress || !HasValidController())
                 return;
 
-            if (m_VoteHandler != null)
+            var pVoter = pEvent.Userid;
+            if (pVoter == null || !pVoter.IsValid)
+                return;
+
+            if (!IsPlayerInVotePool(pVoter.Slot))
             {
-                var pVoter = pEvent.Userid;
-                if (pVoter == null || !pVoter.IsValid)
-                    return;
-                m_VoteHandler(YesNoVoteAction.VoteAction_Vote, pVoter.Slot, pEvent.VoteOption);
+                var vc = VoteController!;
+                int option = pEvent.VoteOption;
+                if (option >= 0 && option < vc.VoteOptionCount.Length && vc.VoteOptionCount[option] > 0)
+                    vc.VoteOptionCount[option]--;
+                if (pVoter.Slot >= 0 && pVoter.Slot < vc.VotesCast.Length)
+                    vc.VotesCast[pVoter.Slot] = (int)CastVote.VOTE_UNCAST;
+                return;
             }
+
+            m_VoteHandler?.Invoke(YesNoVoteAction.VoteAction_Vote, pVoter.Slot, pEvent.VoteOption);
 
             UpdateVoteCounts();
             CheckForEarlyVoteClose();
