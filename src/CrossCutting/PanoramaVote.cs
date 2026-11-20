@@ -433,10 +433,10 @@ namespace cs2_rockthevote
                 return;
             }
 
+            vc.ActiveIssueIndex = -1;
             if (m_VoteResult == null || reason == YesNoVoteEndReason.VoteEnd_Cancelled)
             {
                 SendVoteFailed(reason, overrideFailCode);
-                vc.ActiveIssueIndex = -1;
                 return;
             }
 
