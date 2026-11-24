@@ -1,3 +1,4 @@
+using CounterStrikeSharp.API.Modules.Timers;
 using Microsoft.Extensions.Logging;
 using Timer = CounterStrikeSharp.API.Modules.Timers.Timer;
 
@@ -33,6 +34,8 @@ namespace cs2_rockthevote
 
         public void OnMapStart(string currentMap)
         {
+            _timerChangeMap = null;
+
             // Only act while the initial random change is still pending
             if (!_generalConfig.RandomStartMap || !_firstMapStart)
                 return;
@@ -68,7 +71,7 @@ namespace cs2_rockthevote
 
                 _changeMapManager.ScheduleMapChange(pick.Name);
                 _changeMapManager.ChangeNextMap(0f);
-            });
+            }, TimerFlags.STOP_ON_MAPCHANGE);
         }
     }
 }
